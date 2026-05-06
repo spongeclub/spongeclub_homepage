@@ -123,9 +123,91 @@ function extractFirstHeading(text: string): string | undefined {
   return m?.[1].trim();
 }
 
+// vault 전체에서 이미지 파일을 파일명 단위로 인덱싱한다.
+// 옵시디언 wikilink (`![[name.png]]`)는 폴더 위치를 명시하지 않으므로
+// 파일명 → vault 상대경로 매핑이 필요하다.
+let imageIndexCache: Map<string, string> | null = null;
+const IMAGE_EXT = /\.(png|jpe?g|gif|webp|svg)$/i;
+const SKIP_DIRS = new Set([
+  '.git',
+  '.obsidian',
+  '.claude',
+  '.omc',
+  'node_modules',
+]);
+
+function buildImageIndex(): Map<string, string> {
+  if (imageIndexCache) return imageIndexCache;
+  const index = new Map<string, string>();
+  const walk = (dir: string) => {
+    if (!fs.existsSync(dir)) return;
+    for (const entry of fs.readdirSync(dir)) {
+      if (SKIP_DIRS.has(entry)) continue;
+      const full = path.join(dir, entry);
+      let stat;
+      try {
+        stat = fs.statSync(full);
+      } catch {
+        continue;
+      }
+      if (stat.isDirectory()) {
+        walk(full);
+      } else if (IMAGE_EXT.test(entry)) {
+        if (!index.has(entry)) {
+          index.set(entry, path.relative(VAULT_PATH, full));
+        }
+      }
+    }
+  };
+  walk(VAULT_PATH);
+  imageIndexCache = index;
+  return index;
+}
+
+function rawGithubUrl(relPath: string): string {
+  const segments = relPath.split('/').map((s) => encodeURIComponent(s));
+  return `https://raw.githubusercontent.com/spongeclub/spongeclub_1/main/${segments.join('/')}`;
+}
+
+// 옵시디언 콜아웃 (`> [!type] ...` + 이어지는 `>` 라인들) 통째 제거
+function stripCallouts(md: string): string {
+  return md.replace(
+    /^[ \t]*>[ \t]*\[![\w-]+\][+-]?[^\n]*(?:\n[ \t]*>[^\n]*)*\n?/gm,
+    ''
+  );
+}
+
+// `![[filename]]` 형태의 wikilink 임베드 → 표준 markdown image
+function rewriteWikilinkImages(md: string, imageIndex: Map<string, string>): string {
+  return md.replace(/!\[\[([^\]\|]+?)(?:\|[^\]]*)?\]\]/g, (_match, raw) => {
+    const filename = String(raw).trim();
+    if (!IMAGE_EXT.test(filename)) {
+      return '';
+    }
+    const rel = imageIndex.get(filename);
+    if (!rel) return '';
+    return `![${filename}](${rawGithubUrl(rel)})`;
+  });
+}
+
+// 일반 wikilink (`[[노트]]`) → 단순 텍스트 (사이트에는 해당 노트 페이지가 없음)
+function rewriteWikilinkNotes(md: string): string {
+  return md.replace(/\[\[([^\]\|]+?)(?:\|([^\]]+))?\]\]/g, (_m, target, alias) => {
+    return alias || target;
+  });
+}
+
+export function transformObsidianMarkdown(md: string): string {
+  const imageIndex = buildImageIndex();
+  let out = stripCallouts(md);
+  out = rewriteWikilinkImages(out, imageIndex);
+  out = rewriteWikilinkNotes(out);
+  return out;
+}
+
 export function readSubmissionMarkdown(filePath: string): string {
   const text = fs.readFileSync(filePath, 'utf-8');
-  return stripFrontmatter(text);
+  return transformObsidianMarkdown(stripFrontmatter(text));
 }
 
 function buildWeekFromFolder(folderName: string, members: Member[]): WeekData {
