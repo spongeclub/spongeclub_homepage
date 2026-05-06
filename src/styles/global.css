@@ -1,0 +1,15 @@
+@import "tailwindcss";
+
+@theme {
+  --color-team-1: oklch(72% 0.18 25);
+  --color-team-2: oklch(72% 0.16 60);
+  --color-team-3: oklch(78% 0.15 100);
+  --color-team-4: oklch(72% 0.16 145);
+  --color-team-5: oklch(70% 0.16 230);
+  --color-team-6: oklch(70% 0.16 295);
+}
+
+html {
+  font-family: -apple-system, BlinkMacSystemFont, "Pretendard Variable",
+    Pretendard, "Apple SD Gothic Neo", system-ui, sans-serif;
+}

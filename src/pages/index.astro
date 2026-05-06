@@ -1,0 +1,261 @@
+---
+import Layout from '../layouts/Layout.astro';
+import {
+  buildLatestWeek,
+  groupByTeam,
+  getTeamTopic,
+  vaultGithubUrl,
+  type Submission,
+} from '../lib/data';
+
+const week = buildLatestWeek();
+const grouped = week ? groupByTeam(week.submissions) : new Map();
+const teams = ['1조', '2조', '3조', '4조', '5조', '6조'];
+
+const teamColor = (team: string) =>
+  ({
+    '1조': 'bg-team-1',
+    '2조': 'bg-team-2',
+    '3조': 'bg-team-3',
+    '4조': 'bg-team-4',
+    '5조': 'bg-team-5',
+    '6조': 'bg-team-6',
+  })[team] ?? 'bg-neutral-500';
+
+const teamTextColor = (team: string) =>
+  ({
+    '1조': 'text-team-1',
+    '2조': 'text-team-2',
+    '3조': 'text-team-3',
+    '4조': 'text-team-4',
+    '5조': 'text-team-5',
+    '6조': 'text-team-6',
+  })[team] ?? 'text-neutral-300';
+
+const submissionUrl = (s: Submission) =>
+  s.filePath ? vaultGithubUrl(s.filePath) : '#';
+---
+
+<Layout title="스폰지클럽 — 과제 현황판">
+  {!week && (
+    <main class="max-w-5xl mx-auto p-12 text-center">
+      <h1 class="text-3xl font-semibold mb-4">스폰지클럽</h1>
+      <p class="text-neutral-400">아직 미션 데이터가 없습니다.</p>
+    </main>
+  )}
+
+  {week && (
+    <main class="max-w-7xl mx-auto p-6 sm:p-10">
+      <header class="flex items-end justify-between flex-wrap gap-4 mb-8">
+        <div>
+          <p class="text-sm text-neutral-400 mb-1">스폰지클럽 — 과제 현황판</p>
+          <h1 class="text-3xl sm:text-4xl font-semibold tracking-tight">
+            {week.weekNumber}주차
+            <span class="text-neutral-500 text-xl ml-2">{week.dateLabel}</span>
+          </h1>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <span class="text-sm text-neutral-400">
+            <span class="text-neutral-100 font-semibold">{week.submittedCount}</span>
+            {' / '}
+            {week.totalMembers} 제출
+          </span>
+          <div
+            id="view-toggle"
+            class="inline-flex rounded-md border border-neutral-800 bg-neutral-900 p-0.5 text-sm"
+          >
+            <button
+              data-view="all"
+              class="view-btn px-3 py-1 rounded data-[active=true]:bg-neutral-700 data-[active=true]:text-white text-neutral-400"
+              data-active="true"
+            >
+              전체
+            </button>
+            <button
+              data-view="team"
+              class="view-btn px-3 py-1 rounded data-[active=true]:bg-neutral-700 data-[active=true]:text-white text-neutral-400"
+              data-active="false"
+            >
+              조별
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* 조별 진행률 바 */}
+      <section class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 mb-8">
+        {teams.map((team) => {
+          const subs = grouped.get(team) ?? [];
+          const done = subs.filter((s: Submission) => s.status === 'submitted').length;
+          const drafting = subs.filter((s: Submission) => s.status === 'drafting').length;
+          const total = subs.length;
+          const pct = total === 0 ? 0 : Math.round((done / total) * 100);
+          return (
+            <div class="bg-neutral-900 rounded-md p-3 border border-neutral-800">
+              <div class="flex justify-between items-baseline mb-2">
+                <span class={`text-sm font-medium ${teamTextColor(team)}`}>{team}</span>
+                <span class="text-xs text-neutral-400">
+                  {done}/{total}
+                  {drafting > 0 && (
+                    <span class="text-amber-400/70 ml-1">+{drafting}</span>
+                  )}
+                </span>
+              </div>
+              <div class="h-1.5 bg-neutral-800 rounded-full overflow-hidden">
+                <div class={`h-full ${teamColor(team)}`} style={`width: ${pct}%`}></div>
+              </div>
+            </div>
+          );
+        })}
+      </section>
+
+      {/* 전체 뷰 — 작은 카드 그리드 */}
+      <section data-view-panel="all" class="block">
+        <div class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-12 gap-2">
+          {week.submissions.map((s) => {
+            const cardClass =
+              s.status === 'submitted'
+                ? 'border-neutral-700 bg-neutral-900 hover:border-neutral-500'
+                : s.status === 'drafting'
+                  ? 'border-neutral-800 bg-neutral-900/60 hover:border-neutral-700'
+                  : 'border-neutral-900 bg-neutral-950/40 hover:border-neutral-800';
+            const dotClass =
+              s.status === 'submitted'
+                ? 'bg-emerald-400'
+                : s.status === 'drafting'
+                  ? 'bg-amber-400/70'
+                  : 'bg-neutral-700';
+            const textClass =
+              s.status === 'submitted'
+                ? 'text-neutral-100'
+                : s.status === 'drafting'
+                  ? 'text-neutral-300'
+                  : 'text-neutral-500';
+            return (
+              <a
+                href={submissionUrl(s)}
+                target={s.filePath ? '_blank' : undefined}
+                rel="noopener"
+                class={`group relative flex flex-col items-center justify-center aspect-square rounded-md border ${cardClass} transition`}
+                title={s.noteTitle ?? s.member.nickname}
+              >
+                <span
+                  class={`absolute top-1 left-1 w-1 h-3 rounded-full ${teamColor(s.member.team)}`}
+                ></span>
+                <span
+                  class={`absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full ${dotClass}`}
+                ></span>
+                <span class={`text-xs ${textClass} truncate max-w-full px-1`}>
+                  {s.member.nickname}
+                </span>
+              </a>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* 조별 뷰 — 6개 카드 */}
+      <section data-view-panel="team" class="hidden">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {teams.map((team) => {
+            const subs = grouped.get(team) ?? [];
+            const done = subs.filter((s: Submission) => s.status === 'submitted').length;
+            const total = subs.length;
+            const topic = getTeamTopic(team);
+            return (
+              <div class="bg-neutral-900 border border-neutral-800 rounded-lg overflow-hidden">
+                <header class="flex items-center justify-between px-4 py-3 border-b border-neutral-800">
+                  <div class="flex items-center gap-2">
+                    <span class={`w-2 h-6 rounded-sm ${teamColor(team)}`}></span>
+                    <div>
+                      <span class={`font-semibold ${teamTextColor(team)}`}>{team}</span>
+                      {topic && (
+                        <span class="ml-2 text-xs text-neutral-500">{topic.topic}</span>
+                      )}
+                    </div>
+                  </div>
+                  <span class="text-sm">
+                    <span class="font-semibold">{done}</span>
+                    <span class="text-neutral-500">/{total}</span>
+                  </span>
+                </header>
+                <ul class="divide-y divide-neutral-800/60">
+                  {subs.map((s: Submission) => (
+                    <li>
+                      <a
+                        href={submissionUrl(s)}
+                        target={s.filePath ? '_blank' : undefined}
+                        rel="noopener"
+                        class={`flex items-center gap-3 px-4 py-2 transition ${
+                          s.status === 'submitted'
+                            ? 'hover:bg-neutral-800/60'
+                            : s.status === 'drafting'
+                              ? 'hover:bg-neutral-800/40 text-neutral-400'
+                              : 'opacity-40 hover:opacity-60'
+                        }`}
+                      >
+                        <span
+                          class={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                            s.status === 'submitted'
+                              ? 'bg-emerald-400'
+                              : s.status === 'drafting'
+                                ? 'bg-amber-400/70'
+                                : 'bg-neutral-700'
+                          }`}
+                        ></span>
+                        <span class="text-sm font-medium">{s.member.nickname}</span>
+                        {s.member.isCrew && (
+                          <span class="text-[10px] text-neutral-500 bg-neutral-800 rounded px-1.5">
+                            크루
+                          </span>
+                        )}
+                        <span class="text-xs text-neutral-500 truncate ml-auto">
+                          {s.status === 'empty'
+                            ? '미작성'
+                            : s.status === 'drafting'
+                              ? '작성 중'
+                              : (s.noteTitle ?? '제출')}
+                        </span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      <footer class="mt-12 text-center text-xs text-neutral-600">
+        {week.folderName}
+      </footer>
+    </main>
+  )}
+
+  <script>
+    const buttons = document.querySelectorAll<HTMLButtonElement>('.view-btn');
+    const panelAll = document.querySelector<HTMLElement>('[data-view-panel="all"]');
+    const panelTeam = document.querySelector<HTMLElement>('[data-view-panel="team"]');
+
+    buttons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const target = btn.dataset.view;
+        buttons.forEach((b) =>
+          b.setAttribute('data-active', String(b.dataset.view === target))
+        );
+        if (target === 'all') {
+          panelAll?.classList.remove('hidden');
+          panelAll?.classList.add('block');
+          panelTeam?.classList.add('hidden');
+          panelTeam?.classList.remove('block');
+        } else {
+          panelTeam?.classList.remove('hidden');
+          panelTeam?.classList.add('block');
+          panelAll?.classList.add('hidden');
+          panelAll?.classList.remove('block');
+        }
+      });
+    });
+  </script>
+</Layout>
