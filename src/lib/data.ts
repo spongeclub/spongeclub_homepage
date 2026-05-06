@@ -114,28 +114,34 @@ function parseFrontmatter(text: string): Record<string, string> {
   return out;
 }
 
+function stripFrontmatter(text: string): string {
+  return text.replace(/^---\n[\s\S]*?\n---\n?/, '');
+}
+
 function extractFirstHeading(text: string): string | undefined {
   const m = text.match(/^#\s+(.+)$/m);
   return m?.[1].trim();
 }
 
-export function buildLatestWeek(): WeekData | null {
-  const folders = listWeekFolders();
-  if (folders.length === 0) return null;
+export function readSubmissionMarkdown(filePath: string): string {
+  const text = fs.readFileSync(filePath, 'utf-8');
+  return stripFrontmatter(text);
+}
 
-  const latestFolder = folders[folders.length - 1];
-  const weekDir = path.join(VAULT_PATH, '02_mission', latestFolder);
-  const members = parseMemberList();
+function buildWeekFromFolder(folderName: string, members: Member[]): WeekData {
+  const weekDir = path.join(VAULT_PATH, '02_mission', folderName);
 
   const filesByNick = new Map<string, string>();
-  for (const team of fs.readdirSync(weekDir)) {
-    const teamPath = path.join(weekDir, team);
-    if (!fs.statSync(teamPath).isDirectory()) continue;
-    for (const fname of fs.readdirSync(teamPath)) {
-      if (!fname.endsWith('.md')) continue;
-      const m = fname.match(/^(\d조)_(.+?)_/);
-      if (!m) continue;
-      filesByNick.set(`${m[1]}::${m[2]}`, path.join(teamPath, fname));
+  if (fs.existsSync(weekDir)) {
+    for (const team of fs.readdirSync(weekDir)) {
+      const teamPath = path.join(weekDir, team);
+      if (!fs.statSync(teamPath).isDirectory()) continue;
+      for (const fname of fs.readdirSync(teamPath)) {
+        if (!fname.endsWith('.md')) continue;
+        const m = fname.match(/^(\d조)_(.+?)_/);
+        if (!m) continue;
+        filesByNick.set(`${m[1]}::${m[2]}`, path.join(teamPath, fname));
+      }
     }
   }
 
@@ -158,16 +164,26 @@ export function buildLatestWeek(): WeekData | null {
     };
   });
 
-  const submittedCount = submissions.filter((s) => s.status === 'submitted').length;
-
   return {
-    weekNumber: extractWeekNumber(latestFolder),
-    folderName: latestFolder,
-    dateLabel: extractDateLabel(latestFolder),
+    weekNumber: extractWeekNumber(folderName),
+    folderName,
+    dateLabel: extractDateLabel(folderName),
     submissions,
     totalMembers: members.length,
-    submittedCount,
+    submittedCount: submissions.filter((s) => s.status === 'submitted').length,
   };
+}
+
+export function buildAllWeeks(): WeekData[] {
+  const folders = listWeekFolders();
+  if (folders.length === 0) return [];
+  const members = parseMemberList();
+  return folders.map((f) => buildWeekFromFolder(f, members));
+}
+
+export function buildLatestWeek(): WeekData | null {
+  const all = buildAllWeeks();
+  return all.length === 0 ? null : all[all.length - 1];
 }
 
 export function getTeamTopic(team: string) {
@@ -187,4 +203,14 @@ export function groupByTeam(submissions: Submission[]): Map<string, Submission[]
 export function vaultGithubUrl(filePath: string): string {
   const rel = path.relative(VAULT_PATH, filePath);
   return `https://github.com/spongeclub/spongeclub_1/blob/main/${rel}`;
+}
+
+// 닉네임은 영문/한글 혼재 — URL safe slug 생성을 위해 encodeURIComponent로 wrap
+export function noteSlug(weekNumber: number, team: string, nickname: string): string {
+  return `${weekNumber}/${encodeURIComponent(team)}/${encodeURIComponent(nickname)}`;
+}
+
+export function noteUrl(s: Submission, weekNumber: number): string {
+  if (!s.filePath) return '#';
+  return `/w/${noteSlug(weekNumber, s.member.team, s.member.nickname)}/`;
 }
