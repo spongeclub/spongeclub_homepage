@@ -22,3 +22,9 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# Vercel build에서 clone되는 vault 콘텐츠
+vault/
+
+# Vercel 로컬 캐시
+.vercel/
