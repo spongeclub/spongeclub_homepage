@@ -114,9 +114,18 @@ function parseFrontmatter(text: string): Record<string, string> {
   return out;
 }
 
+function stripFrontmatter(text: string): string {
+  return text.replace(/^---\n[\s\S]*?\n---\n?/, '');
+}
+
 function extractFirstHeading(text: string): string | undefined {
   const m = text.match(/^#\s+(.+)$/m);
   return m?.[1].trim();
+}
+
+export function readSubmissionMarkdown(filePath: string): string {
+  const text = fs.readFileSync(filePath, 'utf-8');
+  return stripFrontmatter(text);
 }
 
 function buildWeekFromFolder(folderName: string, members: Member[]): WeekData {
@@ -194,4 +203,14 @@ export function groupByTeam(submissions: Submission[]): Map<string, Submission[]
 export function vaultGithubUrl(filePath: string): string {
   const rel = path.relative(VAULT_PATH, filePath);
   return `https://github.com/spongeclub/spongeclub_1/blob/main/${rel}`;
+}
+
+// 닉네임은 영문/한글 혼재 — URL safe slug 생성을 위해 encodeURIComponent로 wrap
+export function noteSlug(weekNumber: number, team: string, nickname: string): string {
+  return `${weekNumber}/${encodeURIComponent(team)}/${encodeURIComponent(nickname)}`;
+}
+
+export function noteUrl(s: Submission, weekNumber: number): string {
+  if (!s.filePath) return '#';
+  return `/w/${noteSlug(weekNumber, s.member.team, s.member.nickname)}/`;
 }

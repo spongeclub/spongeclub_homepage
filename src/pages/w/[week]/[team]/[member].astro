@@ -1,0 +1,201 @@
+---
+import { marked } from 'marked';
+import Layout from '../../../../layouts/Layout.astro';
+import {
+  buildAllWeeks,
+  readSubmissionMarkdown,
+  vaultGithubUrl,
+  type Submission,
+  type WeekData,
+} from '../../../../lib/data';
+
+export async function getStaticPaths() {
+  const weeks = buildAllWeeks();
+  const paths: any[] = [];
+  for (const w of weeks) {
+    for (const s of w.submissions) {
+      if (!s.filePath) continue;
+      paths.push({
+        params: {
+          week: String(w.weekNumber),
+          team: s.member.team,
+          member: s.member.nickname,
+        },
+        props: { week: w, submission: s },
+      });
+    }
+  }
+  return paths;
+}
+
+interface Props {
+  week: WeekData;
+  submission: Submission;
+}
+
+const { week, submission } = Astro.props as Props;
+const md = submission.filePath ? readSubmissionMarkdown(submission.filePath) : '';
+const html = marked.parse(md, { async: false }) as string;
+const githubUrl = submission.filePath ? vaultGithubUrl(submission.filePath) : '';
+
+const statusLabel =
+  submission.status === 'submitted'
+    ? '제출 완료'
+    : submission.status === 'drafting'
+      ? '작성 중'
+      : '미작성';
+
+const statusColor =
+  submission.status === 'submitted'
+    ? 'bg-emerald-100 text-emerald-700'
+    : submission.status === 'drafting'
+      ? 'bg-amber-100 text-amber-700'
+      : 'bg-neutral-100 text-neutral-500';
+
+const teamColorBar =
+  ({
+    '1조': 'bg-team-1',
+    '2조': 'bg-team-2',
+    '3조': 'bg-team-3',
+    '4조': 'bg-team-4',
+    '5조': 'bg-team-5',
+    '6조': 'bg-team-6',
+  })[submission.member.team] ?? 'bg-neutral-400';
+---
+
+<Layout title={`${submission.member.nickname} — ${week.weekNumber}주차 | 스폰지클럽`}>
+  <main class="max-w-3xl mx-auto p-6 sm:p-10">
+    <nav class="mb-6 text-sm">
+      <a href="/" class="text-neutral-500 hover:text-neutral-900 transition">
+        ← 현황판
+      </a>
+    </nav>
+
+    <header class="mb-8 pb-6 border-b border-neutral-200">
+      <div class="flex items-center gap-2 mb-3">
+        <span class={`w-1.5 h-5 rounded-sm ${teamColorBar}`}></span>
+        <span class="text-sm text-neutral-500">
+          {submission.member.team}
+          {submission.member.fullName !== submission.member.nickname && (
+            <span class="ml-1 text-neutral-400">({submission.member.fullName})</span>
+          )}
+        </span>
+        <span class={`text-xs px-2 py-0.5 rounded-full ${statusColor}`}>
+          {statusLabel}
+        </span>
+      </div>
+      <h1 class="text-3xl font-semibold tracking-tight text-neutral-900">
+        {submission.noteTitle ?? `${week.weekNumber}주차 — ${submission.member.nickname}`}
+      </h1>
+      {githubUrl && (
+        <a
+          href={githubUrl}
+          target="_blank"
+          rel="noopener"
+          class="inline-block mt-3 text-xs text-neutral-500 hover:text-neutral-900 underline transition"
+        >
+          GitHub에서 원본 보기 ↗
+        </a>
+      )}
+    </header>
+
+    <article class="note-content">
+      <Fragment set:html={html} />
+    </article>
+  </main>
+</Layout>
+
+<style is:global>
+  .note-content {
+    color: rgb(38 38 38); /* neutral-800 */
+    line-height: 1.75;
+  }
+  .note-content h1 {
+    font-size: 1.875rem;
+    font-weight: 600;
+    margin: 2rem 0 1rem;
+    color: rgb(23 23 23); /* neutral-900 */
+  }
+  .note-content h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 1.75rem 0 0.75rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid rgb(229 229 229);
+    color: rgb(23 23 23);
+  }
+  .note-content h3 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin: 1.4rem 0 0.6rem;
+    color: rgb(38 38 38);
+  }
+  .note-content p {
+    margin: 0.8rem 0;
+  }
+  .note-content ul,
+  .note-content ol {
+    margin: 0.8rem 0;
+    padding-left: 1.5rem;
+  }
+  .note-content ul { list-style: disc; }
+  .note-content ol { list-style: decimal; }
+  .note-content li { margin: 0.25rem 0; }
+  .note-content a {
+    color: rgb(37 99 235); /* blue-600 */
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .note-content a:hover { color: rgb(29 78 216); }
+  .note-content code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    background: rgb(245 245 245);
+    padding: 0.1rem 0.35rem;
+    border-radius: 0.25rem;
+    font-size: 0.9em;
+  }
+  .note-content pre {
+    background: rgb(23 23 23);
+    color: rgb(245 245 245);
+    padding: 1rem 1.25rem;
+    border-radius: 0.5rem;
+    overflow-x: auto;
+    margin: 1rem 0;
+    font-size: 0.875rem;
+  }
+  .note-content pre code {
+    background: transparent;
+    padding: 0;
+    color: inherit;
+  }
+  .note-content blockquote {
+    border-left: 3px solid rgb(212 212 212);
+    padding: 0.25rem 0 0.25rem 1rem;
+    margin: 1rem 0;
+    color: rgb(82 82 82);
+  }
+  .note-content hr {
+    border: none;
+    border-top: 1px solid rgb(229 229 229);
+    margin: 2rem 0;
+  }
+  .note-content img {
+    max-width: 100%;
+    border-radius: 0.5rem;
+    margin: 1rem 0;
+  }
+  .note-content table {
+    border-collapse: collapse;
+    margin: 1rem 0;
+    font-size: 0.9rem;
+  }
+  .note-content th,
+  .note-content td {
+    border: 1px solid rgb(229 229 229);
+    padding: 0.5rem 0.75rem;
+  }
+  .note-content th {
+    background: rgb(250 250 250);
+    font-weight: 600;
+  }
+</style>
