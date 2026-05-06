@@ -160,7 +160,7 @@ const latestIdx = weeks.length - 1;
             </div>
 
             {/* 조별 뷰 */}
-            <div data-view-panel="team" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div data-view-panel="team" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {teams.map((team) => {
                 const subs = grouped.get(team) ?? [];
                 const done = subs.filter((s: Submission) => s.status === 'submitted').length;
@@ -168,7 +168,7 @@ const latestIdx = weeks.length - 1;
                 const topic = getTeamTopic(team);
                 return (
                   <div class="bg-white border border-neutral-200 rounded-lg overflow-hidden">
-                    <header class="flex items-center justify-between px-4 py-3 border-b border-neutral-200">
+                    <header class="flex items-center justify-between px-3 py-2.5 border-b border-neutral-200">
                       <div class="flex items-center gap-2 min-w-0">
                         <span class={`w-2 h-6 rounded-sm ${teamColor(team)} flex-shrink-0`}></span>
                         <div class="min-w-0">
@@ -189,7 +189,7 @@ const latestIdx = weeks.length - 1;
                         <li>
                           <a
                             href={submissionUrl(s, week.weekNumber)}
-                            class={`flex items-center gap-3 px-4 py-2 transition ${
+                            class={`flex items-center gap-2 px-3 py-1.5 transition ${
                               s.status === 'submitted'
                                 ? 'hover:bg-neutral-50 text-neutral-900'
                                 : s.status === 'drafting'
@@ -311,13 +311,12 @@ const latestIdx = weeks.length - 1;
           b.setAttribute('data-active', String(b.getAttribute('data-view') === target))
         );
         document.querySelectorAll('[data-view-panel]').forEach((panel) => {
-          const isMatch = panel.getAttribute('data-view-panel') === target;
-          if (target === 'all') {
-            panel.classList.toggle('grid', isMatch);
-            panel.classList.toggle('hidden', !isMatch);
-          } else {
-            panel.classList.toggle('hidden', !isMatch);
-            panel.classList.toggle('grid', !isMatch);
+          const panelType = panel.getAttribute('data-view-panel');
+          const isActive = panelType === target;
+          panel.classList.toggle('hidden', !isActive);
+          // all 패널만 grid 클래스 토글 (team 패널은 마크업에 grid 항상 유지)
+          if (panelType === 'all') {
+            panel.classList.toggle('grid', isActive);
           }
         });
       });
