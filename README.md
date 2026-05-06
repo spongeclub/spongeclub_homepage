@@ -1,43 +1,33 @@
-# Astro Starter Kit: Minimal
+# spongeclub_homepage
 
-```sh
-npm create astro@latest -- --template minimal
+스폰지클럽 과제 현황판 · Astro + Vercel.
+
+## 데이터 소스
+
+vault 레포(`spongeclub/spongeclub_1`)의 `02_mission/`, `99_meta/멤버목록.md`를 빌드 시 스캔한다.
+
+- 로컬: 형제 디렉토리 `../spongeclub`을 자동 사용
+- Vercel: 빌드 시 vault를 `./vault`로 shallow clone (`vercel.json` 참고)
+- 환경변수 `VAULT_PATH`로 임의 경로 지정 가능
+
+## 로컬 개발
+
+```bash
+npm install
+npm run dev          # http://localhost:4321
+npm run build
 ```
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+## 배포
 
-## 🚀 Project Structure
+Vercel에 GitHub 레포를 import 하면 `vercel.json`이 자동 인식된다.
 
-Inside of your Astro project, you'll see the following folders and files:
+- main 브랜치 push → Production
+- PR push → Preview
 
-```text
-/
-├── public/
-├── src/
-│   └── pages/
-│       └── index.astro
-└── package.json
-```
+vault 콘텐츠가 변경되어도 사이트 레포가 변하지 않으면 자동 빌드는 트리거되지 않는다 (다음 단계: vault → 사이트 자동 트리거).
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+## 라우트
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
-
-Any static assets, like images, can be placed in the `public/` directory.
-
-## 🧞 Commands
-
-All commands are run from the root of the project, from a terminal:
-
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+- `/` — 주차 탭 + 조별/전체 토글 현황판
+- `/w/[week]/[team]/[member]/` — 멤버별 노트 (vault md 렌더링)
