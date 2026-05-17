@@ -8,6 +8,7 @@ import {
   type Submission,
   type WeekData,
 } from '../../../../lib/data';
+import { getMemberAnalysis } from '../../../../lib/analysis';
 
 export async function getStaticPaths() {
   const weeks = buildAllWeeks();
@@ -37,6 +38,7 @@ const { week, submission } = Astro.props as Props;
 const md = submission.filePath ? readSubmissionMarkdown(submission.filePath) : '';
 const html = marked.parse(md, { async: false }) as string;
 const githubUrl = submission.filePath ? vaultGithubUrl(submission.filePath) : '';
+const memberAnalysis = getMemberAnalysis(submission.member.team, submission.member.nickname);
 
 const statusLabel =
   submission.status === 'submitted'
@@ -95,6 +97,14 @@ const teamColorBar =
           class="inline-block mt-3 text-xs text-neutral-500 hover:text-neutral-900 underline transition"
         >
           GitHub에서 원본 보기 ↗
+        </a>
+      )}
+      {memberAnalysis && (
+        <a
+          href={`/member/${encodeURIComponent(submission.member.team)}/${encodeURIComponent(submission.member.nickname)}/`}
+          class="inline-block mt-2 ml-4 text-xs text-neutral-500 hover:text-neutral-900 underline transition"
+        >
+          전체 성장기록 →
         </a>
       )}
     </header>

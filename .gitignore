@@ -28,3 +28,7 @@ vault/
 
 # Vercel 로컬 캐시
 .vercel/
+
+# 로컬 도구 상태 (사이트 코드 아님)
+.omc/
+.claude/

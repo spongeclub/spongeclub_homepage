@@ -1,8 +1,16 @@
 ---
 import '../styles/global.css';
 
-type Props = { title?: string };
-const { title = '스폰지클럽' } = Astro.props;
+type Props = {
+  title?: string;
+  description?: string;
+  bodyClass?: string;
+};
+const {
+  title = '스폰지클럽',
+  description = '77명이 매주 만들고, 각자 나누는 AI 빌더 커뮤니티.',
+  bodyClass = 'bg-neutral-50 text-neutral-900 font-sans antialiased',
+} = Astro.props;
 ---
 
 <html lang="ko">
@@ -12,9 +20,21 @@ const { title = '스폰지클럽' } = Astro.props;
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="generator" content={Astro.generator} />
     <meta name="robots" content="noindex, nofollow" />
+    <meta name="description" content={description} />
+    <meta name="color-scheme" content="light" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;900&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"
+    />
     <title>{title}</title>
   </head>
-  <body class="bg-neutral-50 text-neutral-900 font-sans antialiased">
+  <body class={bodyClass}>
     <slot />
   </body>
 </html>

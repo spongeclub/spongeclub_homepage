@@ -1,0 +1,421 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { loadGallery } from '../lib/gallery';
+const { items } = loadGallery();
+
+const categories = [...new Set(items.map(i => i.category))];
+const teamCount = new Set(items.map(i => i.team)).size;
+
+// category counts for summary strip
+const catCounts: Record<string, number> = {};
+items.forEach(i => { catCounts[i.category] = (catCounts[i.category] ?? 0) + 1; });
+const catEntries = Object.entries(catCounts).sort((a, b) => b[1] - a[1]);
+---
+
+<Layout title="산출물 갤러리 — 스폰지클럽" bodyClass="mag">
+  <!-- ═══ NAV ═══ -->
+  <nav class="nav">
+    <div class="wrap nav-inner">
+      <a href="/" class="brand">
+        <span class="brand-shapes" aria-hidden="true">
+          <span class="s-c"></span><span class="s-s"></span><span class="s-t"></span>
+        </span>
+        <span>스폰지클럽</span>
+      </a>
+      <div class="nav-links">
+        <a href="/board/">현황판</a>
+        <a href="/keywords/">키워드</a>
+        <a href="/skills/">스킬모음</a>
+        <a href="/gallery/" aria-current="page">갤러리</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="wrap">
+    <!-- ═══ SECTION HEADER ═══ -->
+    <section class="s" style="padding-top: clamp(56px, 10vh, 100px);">
+      <div class="s-head">
+        <div>
+          <div class="s-num">완성된 산출물</div>
+          <h1 class="s-title">산출물&nbsp;<em>갤러리</em></h1>
+        </div>
+        <p class="s-desc">
+          멤버들이 직접 만들고 배포한 대표 산출물 모음.
+          총 <strong>{items.length}개</strong> 큐레이션.
+        </p>
+      </div>
+
+      <!-- ═══ SUMMARY HEADER ═══ -->
+      <div class="gal-summary reveal d1">
+        <div class="gal-summary-text">
+          <span class="gal-summary-kicker">큐레이션 요약</span>
+          <p class="gal-summary-body">
+            전체 <strong>{teamCount}개 팀</strong>이 제출한
+            <strong>{items.length}개 산출물</strong>을 큐레이션했습니다.
+            배포 사이트부터 자동화 파이프라인까지 {catEntries.length}개 카테고리에 걸쳐 실제 동작하는 프로덕트들입니다.
+          </p>
+        </div>
+        <div class="gal-stat-strip">
+          <div class="gal-stat">
+            <span class="gal-stat-n">{items.length}</span>
+            <span class="gal-stat-l">TOTAL</span>
+          </div>
+          <div class="gal-stat gal-stat--blue">
+            <span class="gal-stat-n">{teamCount}</span>
+            <span class="gal-stat-l">TEAMS</span>
+          </div>
+          {catEntries.map(([cat, count]) => (
+            <div class="gal-stat gal-stat--white">
+              <span class="gal-stat-n">{count}</span>
+              <span class="gal-stat-l">{cat}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <!-- category filter tabs -->
+      <div class="gal-tabs reveal d2">
+        <button class="gal-tab is-active" data-cat="all">
+          <span class="gt-label">전체</span>
+          <span class="gt-count">{items.length}</span>
+        </button>
+        {categories.map(cat => (
+          <button class="gal-tab" data-cat={cat}>
+            <span class="gt-label">{cat}</span>
+            <span class="gt-count">{items.filter(i => i.category === cat).length}</span>
+          </button>
+        ))}
+      </div>
+    </section>
+
+    <!-- ═══ GALLERY GRID ═══ -->
+    <section class="s" style="padding-top: 0; margin-top: 40px;">
+      <div class="article-grid gal-grid">
+        {items.map(item => (
+          <div class="article-card gal-card reveal" data-cat={item.category}>
+            <div class="gal-top">
+              <span class="a-chip gal-cat">{item.category}</span>
+              <span class="gal-week">{item.week}주차</span>
+            </div>
+            <div class="a-title gal-title">{item.title}</div>
+            <div class="a-excerpt gal-desc">{item.description}</div>
+            <div class="a-foot gal-foot">
+              <span class="gal-meta">
+                <b>{item.member}</b> · {item.team}
+              </span>
+              {item.url ? (
+                <a
+                  href={item.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="gal-link"
+                  onclick="event.stopPropagation()"
+                >
+                  결과물 보기 ↗
+                </a>
+              ) : (
+                <span class="gal-no-url">로컬 운영 중</span>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <footer class="mag-footer">
+      <div class="fo-bot">
+        <span>스폰지클럽 — 매주 만들고, 각자 나눈다</span>
+        <span>큐레이션 {items.length}개</span>
+      </div>
+    </footer>
+  </main>
+</Layout>
+
+<style>
+/* ─── SUMMARY HEADER ─── */
+.gal-summary {
+  margin-top: 40px;
+  border: 4px solid var(--fg);
+  box-shadow: var(--sh-l);
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0;
+  background: var(--key);
+  position: relative;
+}
+.gal-summary::before {
+  content: "";
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  width: 22px;
+  height: 22px;
+  background: var(--red);
+  border: 4px solid var(--fg);
+  border-radius: 9999px;
+  z-index: 1;
+}
+.gal-summary-text {
+  padding: 28px 32px;
+  border-right: 4px solid var(--fg);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.gal-summary-kicker {
+  font-family: var(--font-label);
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.10em;
+  background: var(--fg);
+  color: var(--white);
+  padding: 5px 10px;
+  align-self: flex-start;
+}
+.gal-summary-body {
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.65;
+  color: var(--fg);
+  max-width: 560px;
+}
+.gal-summary-body strong {
+  font-weight: 900;
+}
+.gal-stat-strip {
+  display: flex;
+  flex-direction: column;
+}
+.gal-stat {
+  padding: 20px 26px;
+  border-bottom: 4px solid var(--fg);
+  background: var(--key);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 120px;
+}
+.gal-stat:last-child {
+  border-bottom: none;
+}
+.gal-stat--blue {
+  background: var(--blue);
+  color: var(--white);
+}
+.gal-stat--white {
+  background: var(--white);
+}
+.gal-stat-n {
+  font-family: var(--font-display);
+  font-size: 38px;
+  font-weight: 900;
+  line-height: 0.9;
+  letter-spacing: -0.04em;
+}
+.gal-stat-l {
+  font-family: var(--font-label);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.10em;
+}
+@media (max-width: 760px) {
+  .gal-summary {
+    grid-template-columns: 1fr;
+  }
+  .gal-summary-text {
+    border-right: none;
+    border-bottom: 4px solid var(--fg);
+  }
+  .gal-stat-strip {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .gal-stat {
+    flex: 1;
+    border-bottom: none;
+    border-right: 4px solid var(--fg);
+    min-width: 90px;
+  }
+  .gal-stat:last-child {
+    border-right: none;
+  }
+}
+
+/* ─── GALLERY TABS ─── */
+.gal-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 32px;
+}
+.gal-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border-radius: 0;
+  border: 3px solid var(--fg);
+  background: var(--white);
+  box-shadow: var(--sh-s);
+  font-family: var(--font-label);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg);
+  cursor: pointer;
+  transition: transform 160ms ease-out, box-shadow 160ms ease-out, background 160ms ease-out;
+}
+.gal-tab:hover {
+  background: var(--muted);
+  transform: translate(-2px, -2px);
+  box-shadow: var(--sh-m);
+}
+.gal-tab.is-active {
+  background: var(--key);
+  border-color: var(--fg);
+  box-shadow: var(--sh-m);
+  transform: translate(-2px, -2px);
+}
+.gt-count {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 900;
+  background: var(--fg);
+  color: var(--white);
+  padding: 1px 6px;
+  letter-spacing: 0;
+}
+.gal-tab.is-active .gt-count {
+  background: var(--fg);
+  color: var(--key);
+}
+
+/* ─── GALLERY CARD EXTRAS ─── */
+.gal-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.gal-cat {
+  flex-shrink: 0;
+}
+.gal-week {
+  font-family: var(--font-label);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  color: var(--fg);
+  text-transform: uppercase;
+  background: var(--muted);
+  border: 2px solid var(--fg);
+  padding: 3px 7px;
+}
+.gal-title {
+  font-size: 20px;
+}
+.gal-desc {
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--fg);
+  font-weight: 500;
+  flex: 1;
+}
+.gal-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.gal-meta {
+  font-family: var(--font-label);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: var(--fg);
+  font-weight: 600;
+  text-transform: uppercase;
+}
+.gal-meta b {
+  font-weight: 900;
+}
+.gal-link {
+  font-family: var(--font-label);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg);
+  background: var(--key);
+  border: 2px solid var(--fg);
+  box-shadow: var(--sh-s);
+  padding: 4px 9px;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: transform 160ms ease-out, box-shadow 160ms ease-out;
+  display: inline-block;
+}
+.gal-link:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--sh-m);
+}
+.gal-no-url {
+  font-family: var(--font-label);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg);
+  opacity: 0.5;
+}
+
+/* hidden via JS filter */
+.gal-card.is-hidden {
+  display: none;
+}
+
+/* ─── FOOTER (page-scoped override) ─── */
+.mag-footer {
+  margin-top: 80px;
+  background: var(--fg);
+  color: var(--white);
+  border-top: 4px solid var(--fg);
+  padding: 40px 0 36px;
+}
+.fo-bot {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-family: var(--font-label);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--white);
+}
+</style>
+
+<script>
+  const tabs = document.querySelectorAll<HTMLButtonElement>('.gal-tab');
+  const cards = document.querySelectorAll<HTMLDivElement>('.gal-card');
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('is-active'));
+      tab.classList.add('is-active');
+
+      const cat = tab.dataset.cat;
+      cards.forEach(card => {
+        if (cat === 'all' || card.dataset.cat === cat) {
+          card.classList.remove('is-hidden');
+        } else {
+          card.classList.add('is-hidden');
+        }
+      });
+    });
+  });
+</script>

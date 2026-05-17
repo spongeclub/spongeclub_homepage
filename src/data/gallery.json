@@ -1,0 +1,135 @@
+{
+  "curatedAt": "2026-05-17",
+  "items": [
+    {
+      "title": "MEDIT CX Hub",
+      "member": "유스",
+      "team": "1조",
+      "week": 2,
+      "category": "배포 사이트",
+      "description": "Zendesk 티켓 Sync부터 Gemini LLM 원인 요약, 위클리 회의록·월간 보고서·글로벌 뉴스레터 자동 export까지 CX 팀의 산출물 80%를 자동화한 웹 OS. Supabase + Next.js + Gemini + Vercel 무료 티어로 9개 부품을 추가 비용 0원에 구현했다.",
+      "url": "https://medit-cx-hub.vercel.app",
+      "notePath": "02_mission/2주차_0517/1조/1조_유스(김기태)_2주차_submit.md"
+    },
+    {
+      "title": "집다움 OS",
+      "member": "에이미(박경선)",
+      "team": "2조",
+      "week": 2,
+      "category": "배포 사이트",
+      "description": "인스타그램 캐러셀 콘텐츠 제작을 위한 통합 작업 환경. 주제 선택 → AI 카피 → 슬라이드 편집 → PNG 다운까지 한 화면에서 완결되며, 기존 6개 도구를 1개로 줄였다. Next.js 14 + Supabase + Claude API + Vercel로 배포된 실사용 중인 프로덕트.",
+      "url": "https://jipdaum-os.vercel.app",
+      "notePath": "02_mission/2주차_0517/2조/2조_에이미(박경선)_2주차_submit.md"
+    },
+    {
+      "title": "Vupercent Content OS",
+      "member": "잭(유재현)",
+      "team": "1조",
+      "week": 2,
+      "category": "배포 사이트",
+      "description": "텔레그램 봇이 4개 질문으로 암묵지를 수집하고 인스타 카드뉴스 10장 + 캡션 + CTA를 자동 생성하는 콘텐츠 파이프라인. 광고 운영·코칭에서 나온 인사이트가 대화 속에 흩어지는 통점을 구조화해 해결했다.",
+      "url": "https://vupercent-content-os.vercel.app",
+      "notePath": "02_mission/2주차_0517/1조/1조_잭(유재현)_2주차_submit.md"
+    },
+    {
+      "title": "Kernel Dashboard",
+      "member": "코니",
+      "team": "3조",
+      "week": 2,
+      "category": "스킬·플러그인",
+      "description": "스크랩은 하지만 다시 안 보는 문제를 해결한 꿀팁 큐레이션 생태계. Claude 스킬 6개(수집·큐레이션·검색·합성 등) + 노션 DB 4개 + 텔레그램 4단계 라우팅으로 구성되며, 매주 월요일 자동 큐레이션 후 OK 한 마디로 승인하는 구조다.",
+      "url": "https://kernel-jet.vercel.app",
+      "notePath": "02_mission/2주차_0517/3조/3조_코니(황초롱)_2주차_submit.md"
+    },
+    {
+      "title": "글로벌 ETF 자동 스크리너",
+      "member": "마라",
+      "team": "2조",
+      "week": 2,
+      "category": "자동화",
+      "description": "한국 + 미국 ETF 8,408개를 30분 간격으로 자동 스크리닝하는 텔레그램 봇 시스템. KIS API + Yahoo Finance로 골든크로스 패턴을 A~E급 5단계로 분류하고, 장중 실시간 알림까지 완전 자동화됐다.",
+      "url": "",
+      "notePath": "02_mission/2주차_0517/2조/2조_마라_2주차_submit.md"
+    },
+    {
+      "title": "한글 받침 학습 게임",
+      "member": "써니(박수연)",
+      "team": "5조",
+      "week": 2,
+      "category": "배포 사이트",
+      "description": "미국에서 자라는 한인 2세 아이를 위해 만든 인터랙티브 학습 게임. MediaPipe 손 인식 기반 손가락 총쏘기 모션으로 받침 14개를 맞추면 결합 음성이 울린다. 직접 녹음한 음성 + 마인크래프트 스타일 3D 블록 에셋까지 직접 제작했다.",
+      "url": "https://hangul-game-black.vercel.app",
+      "notePath": "02_mission/2주차_0517/5조/5조_써니(박수연)_2주차_submit.md"
+    },
+    {
+      "title": "하루의 호흡",
+      "member": "아가타(정재율)",
+      "team": "1조",
+      "week": 2,
+      "category": "배포 사이트",
+      "description": "개인 사고파트너 OS에서 출발해 퍼블릭 웹서비스로 전환 구현한 마음챙김 앱. 사적인 루틴 도구를 외부 사용자가 쓸 수 있는 형태로 완성해 Vercel에 배포했다.",
+      "url": "https://daily-breaths.vercel.app",
+      "notePath": "02_mission/2주차_0517/1조/1조_아가타(정재율)_2주차_submit.md"
+    },
+    {
+      "title": "Task OS",
+      "member": "위시(김가연)",
+      "team": "4조",
+      "week": 2,
+      "category": "배포 사이트",
+      "description": "하루 중 새 태스크가 끼어들 때마다 전체 순서를 머릿속으로 재계산해야 하는 스트레스를 없앤 우선순위 자동 제안 시스템. Claude 커맨드 스킬 + Next.js + Vercel로 약 2시간 만에 설계·구현·테스트를 완료했다.",
+      "url": "https://task-os-sandy.vercel.app",
+      "notePath": "02_mission/2주차_0517/4조/4조_위시(김가연)_2주차_submit.md"
+    },
+    {
+      "title": "Syncalive 캐러셀 생성기",
+      "member": "포노미터(김미라)",
+      "team": "2조",
+      "week": 2,
+      "category": "배포 사이트",
+      "description": "1주차 캐러셀 생성기에 Gemini 이미지 생성·업로드, 실시간 미리보기, PNG ZIP 다운로드, 캡션·해시태그 자동 생성, 브랜드 로고 기능을 추가한 완성판. 입력 폼 수정 시 슬라이드에 즉시 반영된다.",
+      "url": "https://syncalive-carousel.vercel.app",
+      "notePath": "02_mission/2주차_0517/2조/2조_포노미터(김미라)_2주차_submit.md"
+    },
+    {
+      "title": "MuteZeze 인사이트 아카이브",
+      "member": "제제(최지예)",
+      "team": "2조",
+      "week": 2,
+      "category": "배포 사이트",
+      "description": "사진첩에 쌓인 강연·리서치 자료를 카드뉴스 소재로 꺼내 쓸 수 있는 인사이트 라이브러리. Supabase 연결 + 텔레그램 연동까지 진행하며, 베이직 베이지 + 세리프 폰트의 따뜻하고 미니멀한 디자인으로 완성했다.",
+      "url": "https://mutezeze.vercel.app",
+      "notePath": "02_mission/2주차_0517/2조/2조_제제(최지예)_2주차_submit.md"
+    },
+    {
+      "title": "Work Dashboard",
+      "member": "Iny",
+      "team": "2조",
+      "week": 1,
+      "category": "배포 사이트",
+      "description": "여러 브랜드 작업의 일정·기획안·피드백을 한 화면에서 관리하는 팀 공유 웹 대시보드. 표 보기·월간 달력 토글, D-Day 뱃지, 브랜드별 색 스트립, 관리자/뷰어/외부 3단계 권한까지 갖춘 실무 투입 수준의 산출물이다.",
+      "url": "https://work-dashboard-web.vercel.app",
+      "notePath": "02_mission/1주차_0510/2조/2조_Iny_1주차_submit.md"
+    },
+    {
+      "title": "Self-Discovery 일일 회고 봇",
+      "member": "Hook2(이창환)",
+      "team": "6조",
+      "week": 2,
+      "category": "자동화",
+      "description": "매일 아침 8시 텔레그램 봇이 vault의 행동 데이터 기반 회상 질문을 발송하고 답변을 PARA 방식으로 누적하는 자기인식 시스템. 6개월 후 이직 자기소개서·면접 데이터로 자동 환원되도록 설계됐다.",
+      "url": "",
+      "notePath": "02_mission/2주차_0517/6조/6조_Hook2(이창환)_2주차_submit.md"
+    },
+    {
+      "title": "Carousel OS (봄)",
+      "member": "봄(김연미)",
+      "team": "2조",
+      "week": 2,
+      "category": "배포 사이트",
+      "description": "현업 스레드 콘텐츠 가이드(폰트·색상·여백 규칙)를 PDF로 학습시켜 디자인 시스템을 강제하는 캐러셀 편집 웹앱. Claude Code로 Vercel 배포까지 직접 진행했다.",
+      "url": "https://carousel-os.vercel.app",
+      "notePath": "02_mission/2주차_0517/2조/2조_봄(김연미)_2주차_submit.md"
+    }
+  ]
+}

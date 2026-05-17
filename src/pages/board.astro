@@ -1,0 +1,330 @@
+---
+import Layout from '../layouts/Layout.astro';
+import {
+  buildAllWeeks,
+  groupByTeam,
+  getTeamTopic,
+  noteUrl,
+  type Submission,
+  type WeekData,
+} from '../lib/data';
+
+const weeks = buildAllWeeks();
+const teams = ['1조', '2조', '3조', '4조', '5조', '6조'];
+
+const teamColor = (team: string) =>
+  ({
+    '1조': 'bg-team-1',
+    '2조': 'bg-team-2',
+    '3조': 'bg-team-3',
+    '4조': 'bg-team-4',
+    '5조': 'bg-team-5',
+    '6조': 'bg-team-6',
+  })[team] ?? 'bg-neutral-400';
+
+const teamTextColor = (team: string) =>
+  ({
+    '1조': 'text-team-1',
+    '2조': 'text-team-2',
+    '3조': 'text-team-3',
+    '4조': 'text-team-4',
+    '5조': 'text-team-5',
+    '6조': 'text-team-6',
+  })[team] ?? 'text-neutral-700';
+
+const submissionUrl = (s: Submission, weekNumber: number) =>
+  s.filePath ? noteUrl(s, weekNumber) : '#';
+
+const statusDot = (s: Submission) =>
+  s.status === 'submitted'
+    ? 'bg-emerald-500'
+    : s.status === 'drafting'
+      ? 'bg-amber-500'
+      : 'bg-neutral-300';
+
+const statusText = (s: Submission) =>
+  s.status === 'submitted' ? '제출' : s.status === 'drafting' ? '작성 중' : '미작성';
+
+const latestIdx = weeks.length - 1;
+---
+
+<Layout title="스폰지클럽 — 과제 현황판">
+  {weeks.length === 0 && (
+    <main class="max-w-5xl mx-auto p-12 text-center">
+      <h1 class="text-3xl font-semibold mb-4">스폰지클럽</h1>
+      <p class="text-neutral-500">아직 미션 데이터가 없습니다.</p>
+    </main>
+  )}
+
+  {weeks.length > 0 && (
+    <main class="max-w-7xl mx-auto p-6 sm:p-10">
+      <header class="mb-6">
+        <p class="text-sm text-neutral-500 mb-1">스폰지클럽</p>
+        <h1 class="text-3xl sm:text-4xl font-semibold tracking-tight text-neutral-900">
+          과제 현황판
+        </h1>
+      </header>
+
+      {/* 주차 탭 */}
+      <nav
+        id="week-tabs"
+        class="flex flex-wrap gap-1 mb-4 border-b border-neutral-200 pb-3"
+      >
+        {weeks.map((w, i) => (
+          <button
+            data-week-idx={i}
+            data-active={i === latestIdx ? 'true' : 'false'}
+            class="week-tab px-3 py-1.5 rounded-md text-sm font-medium border border-transparent
+              data-[active=true]:bg-neutral-900 data-[active=true]:text-white data-[active=true]:border-neutral-900
+              data-[active=false]:text-neutral-500 data-[active=false]:hover:text-neutral-900 data-[active=false]:hover:bg-neutral-100
+              transition"
+          >
+            <span>{w.weekNumber}주차</span>
+            {w.dateLabel && (
+              <span class="ml-1.5 text-xs opacity-70">{w.dateLabel}</span>
+            )}
+          </button>
+        ))}
+      </nav>
+
+      {/* 통계 + 뷰 토글 */}
+      <div class="flex items-center justify-between flex-wrap gap-3 mb-6">
+        <div class="flex items-center gap-3 text-sm">
+          <span id="week-summary" class="text-neutral-600"></span>
+          <span class="flex items-center gap-3 text-xs text-neutral-500">
+            <span class="flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>제출
+            </span>
+            <span class="flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>작성 중
+            </span>
+            <span class="flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-neutral-300"></span>미작성
+            </span>
+          </span>
+        </div>
+        <div
+          id="view-toggle"
+          class="inline-flex rounded-md border border-neutral-200 bg-white p-0.5 text-sm"
+        >
+          <button
+            data-view="team"
+            class="view-btn px-3 py-1 rounded data-[active=true]:bg-neutral-900 data-[active=true]:text-white text-neutral-600"
+            data-active="true"
+          >
+            조별
+          </button>
+          <button
+            data-view="all"
+            class="view-btn px-3 py-1 rounded data-[active=true]:bg-neutral-900 data-[active=true]:text-white text-neutral-600"
+            data-active="false"
+          >
+            전체
+          </button>
+        </div>
+      </div>
+
+      {/* 주차별 패널 */}
+      {weeks.map((week, i) => {
+        const grouped = groupByTeam(week.submissions);
+        return (
+          <section
+            data-week-panel={i}
+            class={i === latestIdx ? 'block' : 'hidden'}
+          >
+            {/* 조별 진행률 미니 바 */}
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 mb-6">
+              {teams.map((team) => {
+                const subs = grouped.get(team) ?? [];
+                const done = subs.filter((s: Submission) => s.status === 'submitted').length;
+                const drafting = subs.filter((s: Submission) => s.status === 'drafting').length;
+                const total = subs.length;
+                const pct = total === 0 ? 0 : Math.round((done / total) * 100);
+                return (
+                  <div class="bg-white rounded-md p-3 border border-neutral-200">
+                    <div class="flex justify-between items-baseline mb-2">
+                      <span class={`text-sm font-medium ${teamTextColor(team)}`}>{team}</span>
+                      <span class="text-xs text-neutral-600">
+                        {pct}%
+                        {drafting > 0 && (
+                          <span class="text-amber-600 ml-1">+{drafting}</span>
+                        )}
+                      </span>
+                    </div>
+                    <div class="h-1.5 bg-neutral-100 rounded-full overflow-hidden">
+                      <div class={`h-full ${teamColor(team)}`} style={`width: ${pct}%`}></div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* 조별 뷰 */}
+            <div data-view-panel="team" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {teams.map((team) => {
+                const subs = grouped.get(team) ?? [];
+                const done = subs.filter((s: Submission) => s.status === 'submitted').length;
+                const total = subs.length;
+                const topic = getTeamTopic(team);
+                return (
+                  <div class="bg-white border border-neutral-200 rounded-lg overflow-hidden">
+                    <header class="flex items-center justify-between px-3 py-2.5 border-b border-neutral-200">
+                      <div class="flex items-center gap-2 min-w-0">
+                        <span class={`w-2 h-6 rounded-sm ${teamColor(team)} flex-shrink-0`}></span>
+                        <div class="min-w-0">
+                          <span class={`font-semibold ${teamTextColor(team)}`}>{team}</span>
+                          {topic && (
+                            <span class="ml-2 text-xs text-neutral-500 truncate">
+                              {topic.topic}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <span class="text-sm flex-shrink-0 font-semibold text-neutral-900">
+                        {total === 0 ? 0 : Math.round((done / total) * 100)}%
+                      </span>
+                    </header>
+                    <ul class="divide-y divide-neutral-100">
+                      {subs.map((s: Submission) => (
+                        <li>
+                          <a
+                            href={submissionUrl(s, week.weekNumber)}
+                            class={`flex items-center gap-2 px-3 py-1.5 transition ${
+                              s.status === 'submitted'
+                                ? 'hover:bg-neutral-50 text-neutral-900'
+                                : s.status === 'drafting'
+                                  ? 'hover:bg-neutral-50 text-neutral-700'
+                                  : 'opacity-50 hover:opacity-80'
+                            }`}
+                          >
+                            <span class={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${statusDot(s)}`}></span>
+                            <span class="text-sm font-medium">{s.member.nickname}</span>
+                            {s.member.isCrew && (
+                              <span class="text-[10px] text-neutral-500 bg-neutral-100 rounded px-1.5">
+                                크루
+                              </span>
+                            )}
+                            <span class="text-xs text-neutral-500 truncate ml-auto">
+                              {statusText(s)}
+                            </span>
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* 전체 뷰 */}
+            <div data-view-panel="all" class="hidden grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-12 gap-2">
+              {week.submissions.map((s) => {
+                const cardClass =
+                  s.status === 'submitted'
+                    ? 'border-neutral-300 bg-white hover:border-neutral-500'
+                    : s.status === 'drafting'
+                      ? 'border-neutral-200 bg-white hover:border-neutral-400'
+                      : 'border-neutral-100 bg-neutral-50 hover:border-neutral-200';
+                const textClass =
+                  s.status === 'submitted'
+                    ? 'text-neutral-900'
+                    : s.status === 'drafting'
+                      ? 'text-neutral-700'
+                      : 'text-neutral-400';
+                return (
+                  <a
+                    href={submissionUrl(s, week.weekNumber)}
+                    class={`group relative flex flex-col items-center justify-center aspect-square rounded-md border ${cardClass} transition`}
+                    title={s.noteTitle ?? s.member.nickname}
+                  >
+                    <span class={`absolute top-1 left-1 w-1 h-3 rounded-full ${teamColor(s.member.team)}`}></span>
+                    <span class={`absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full ${statusDot(s)}`}></span>
+                    <span class={`text-xs ${textClass} truncate max-w-full px-1`}>
+                      {s.member.nickname}
+                    </span>
+                  </a>
+                );
+              })}
+            </div>
+          </section>
+        );
+      })}
+
+      <footer class="mt-12 text-center text-xs text-neutral-400">
+        <span id="week-folder"></span>
+      </footer>
+    </main>
+  )}
+
+  <script
+    is:inline
+    define:vars={{
+      summaryPerWeek: weeks.map((w) => ({
+        submitted: w.submittedCount,
+        drafting: w.submissions.filter((s) => s.status === 'drafting').length,
+        total: w.totalMembers,
+        folder: w.folderName,
+      })),
+    }}
+  >
+    const tabs = document.querySelectorAll('.week-tab');
+    const panels = document.querySelectorAll('[data-week-panel]');
+    const summaryEl = document.getElementById('week-summary');
+    const folderEl = document.getElementById('week-folder');
+
+    function renderSummary(idx) {
+      const s = summaryPerWeek[idx];
+      if (!s || !summaryEl) return;
+      summaryEl.innerHTML =
+        `<span class="text-neutral-900 font-semibold">${s.submitted}</span>` +
+        ` / ${s.total} 제출` +
+        (s.drafting > 0 ? ` · <span class="text-amber-600">${s.drafting} 작성 중</span>` : '');
+      if (folderEl) folderEl.textContent = s.folder;
+    }
+
+    function selectWeek(idx) {
+      tabs.forEach((t) => {
+        t.setAttribute(
+          'data-active',
+          String(Number(t.getAttribute('data-week-idx')) === idx)
+        );
+      });
+      panels.forEach((p) => {
+        const isActive = Number(p.getAttribute('data-week-panel')) === idx;
+        p.classList.toggle('hidden', !isActive);
+        p.classList.toggle('block', isActive);
+      });
+      renderSummary(idx);
+    }
+
+    tabs.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        selectWeek(Number(tab.getAttribute('data-week-idx')));
+      });
+    });
+
+    const viewBtns = document.querySelectorAll('.view-btn');
+    viewBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const target = btn.getAttribute('data-view');
+        viewBtns.forEach((b) =>
+          b.setAttribute('data-active', String(b.getAttribute('data-view') === target))
+        );
+        document.querySelectorAll('[data-view-panel]').forEach((panel) => {
+          const panelType = panel.getAttribute('data-view-panel');
+          const isActive = panelType === target;
+          panel.classList.toggle('hidden', !isActive);
+          // all 패널만 grid 클래스 토글 (team 패널은 마크업에 grid 항상 유지)
+          if (panelType === 'all') {
+            panel.classList.toggle('grid', isActive);
+          }
+        });
+      });
+    });
+
+    const initialActive = Array.from(tabs).find((t) => t.getAttribute('data-active') === 'true');
+    if (initialActive) {
+      renderSummary(Number(initialActive.getAttribute('data-week-idx')));
+    }
+  </script>
+</Layout>

@@ -1,0 +1,219 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import {
+  buildAllWeeks,
+  buildWeekArticles,
+  pickFeature,
+  getTeamTopic,
+  cardTitle,
+  weekTheme,
+  type Article,
+} from '../../lib/data';
+
+export function getStaticPaths() {
+  const weeks = buildAllWeeks().filter((w) => w.submittedCount > 0);
+  return weeks.map((w) => ({
+    params: { week: String(w.weekNumber) },
+    props: { weekNumber: w.weekNumber },
+  }));
+}
+
+const { weekNumber } = Astro.props as { weekNumber: number };
+
+const weeks = buildAllWeeks().filter((w) => w.submittedCount > 0);
+const idx = weeks.findIndex((w) => w.weekNumber === weekNumber);
+const week = weeks[idx];
+const prev = idx > 0 ? weeks[idx - 1] : null;
+const next = idx < weeks.length - 1 ? weeks[idx + 1] : null;
+
+const articles = buildWeekArticles(week);
+const feature = pickFeature(articles);
+
+const TEAMS = ['1조', '2조', '3조', '4조', '5조', '6조'];
+const byTeam = new Map<string, Article[]>();
+for (const a of articles) {
+  if (a === feature) continue;
+  const arr = byTeam.get(a.member.team) ?? [];
+  arr.push(a);
+  byTeam.set(a.member.team, arr);
+}
+
+const theme = weekTheme(articles);
+const vol = (n: number) => `VOL.${String(n).padStart(2, '0')}`;
+const rate =
+  week.totalMembers > 0
+    ? Math.round((week.submittedCount / week.totalMembers) * 100)
+    : 0;
+const year = new Date().getFullYear();
+---
+
+<Layout
+  title={`${vol(weekNumber)} · ${weekNumber}주차 — 스폰지클럽`}
+  description={`스폰지클럽 ${weekNumber}주차 — ${articles.length}명의 기록.`}
+  bodyClass="mag"
+>
+  <!-- ═══ NAV ═══ -->
+  <nav class="nav">
+    <div class="wrap nav-inner">
+      <a href="/" class="brand">
+        <span class="brand-shapes" aria-hidden="true">
+          <span class="s-c"></span>
+          <span class="s-s"></span>
+          <span class="s-t"></span>
+        </span>
+        <span>스폰지클럽</span>
+      </a>
+      <div class="nav-links">
+        <a href="/#about">소개</a>
+        <a href="/keywords/">키워드</a>
+        <a href="/skills/">스킬모음</a>
+        <a href="/gallery/">갤러리</a>
+        <a href="/board/">현황판</a>
+      </div>
+      <span class="nav-vol">{vol(weekNumber)}</span>
+    </div>
+  </nav>
+
+  <main class="wrap">
+    <!-- ═══ 이슈 표지 ═══ -->
+    <header class="issue-cover">
+      <div class="ic-kick reveal d1">
+        {vol(weekNumber)} · {weekNumber}주차{week.dateLabel ? ` · ${week.dateLabel}` : ''}
+      </div>
+      <h1 class="reveal d2">
+        {theme || `${weekNumber}주차의 기록`}
+      </h1>
+      <p class="ic-sub reveal d3">
+        {articles.length}명이 각자의 방식으로 이번 주를 기록했다.
+      </p>
+      <div class="ic-stats reveal d4">
+        <span><b>{articles.length}</b>개 기록</span>
+        <span><b>{week.submittedCount}</b> / {week.totalMembers}명 제출</span>
+        <span><b>{rate}%</b> 제출률</span>
+      </div>
+    </header>
+
+    {feature && (
+      <article class="feature">
+        <div class="feature-side">
+          <span class="f-tag">★ 이번 호 주요 기사</span>
+          <span class="f-team">{feature.member.team}</span>
+          <span class="f-name">
+            글 ·{' '}
+            <a
+              href={`/member/${encodeURIComponent(feature.member.team)}/${encodeURIComponent(feature.member.nickname)}/`}
+            >
+              <b>{feature.member.nickname}</b>
+            </a>
+          </span>
+        </div>
+        <div class="feature-main">
+          <h2 class="fm-title">{cardTitle(feature)}</h2>
+          <p class="fm-excerpt">{feature.excerpt}</p>
+          <a class="fm-cta" href={feature.url}>전체 기록 읽기 →</a>
+        </div>
+      </article>
+    )}
+
+    {articles.length === 0 && (
+      <div class="empty-note" style="margin-top:40px">
+        이 호에는 아직 제출된 기록이 없습니다.
+      </div>
+    )}
+
+    <!-- ═══ 조별 기록 ═══ -->
+    {TEAMS.map((team) => {
+      const list = byTeam.get(team) ?? [];
+      if (list.length === 0) return null;
+      const topic = getTeamTopic(team);
+      return (
+        <section class="team-block">
+          <div class="team-bar">
+            <span class="tb-team">
+              {team.replace('조', '')}<em>조</em>
+            </span>
+            {topic && <span class="tb-topic">{topic.topic}</span>}
+            <span class="tb-count">{list.length}개 기록</span>
+          </div>
+          <div class="article-grid">
+            {list.map((a) => (
+              <a class="article-card" href={a.url}>
+                <span class="a-by">
+                  <b>{a.member.nickname}</b>{a.member.isCrew ? ' · 크루' : ''}
+                </span>
+                <h3 class="a-title">{cardTitle(a)}</h3>
+                {a.missions.filter((m) => m.title).slice(1, 4).length > 0 && (
+                  <div class="a-missions">
+                    {a.missions
+                      .filter((m) => m.title)
+                      .slice(1, 4)
+                      .map((m) => (
+                        <span class="a-chip">+ {m.title}</span>
+                      ))}
+                  </div>
+                )}
+                <p class="a-excerpt">{a.excerpt}</p>
+                <div class="a-foot">
+                  <span>{team}</span>
+                  <span class="a-read">읽기 →</span>
+                </div>
+              </a>
+            ))}
+          </div>
+        </section>
+      );
+    })}
+
+    <!-- ═══ 이슈 이동 ═══ -->
+    <nav class="issue-nav">
+      {prev ? (
+        <a href={`/issue/${prev.weekNumber}/`} class="in-prev">
+          <span class="in-label">← 지난 호</span>
+          <span>{vol(prev.weekNumber)} · {prev.weekNumber}주차</span>
+        </a>
+      ) : (
+        <span></span>
+      )}
+      {next ? (
+        <a href={`/issue/${next.weekNumber}/`} class="in-next">
+          <span class="in-label">다음 호 →</span>
+          <span>{vol(next.weekNumber)} · {next.weekNumber}주차</span>
+        </a>
+      ) : (
+        <span></span>
+      )}
+    </nav>
+  </main>
+
+  <!-- ═══ FOOTER ═══ -->
+  <footer class="mag-footer">
+    <div class="wrap">
+      <div class="fo-grid">
+        <div class="fo-pitch">
+          매주 만들고,<br /><em>각자</em> 나눈다.
+        </div>
+        <div class="fo-col">
+          <h4>둘러보기</h4>
+          <ul>
+            <li><a href="/#about">소개</a></li>
+            <li><a href="/keywords/">키워드 분석</a></li>
+            <li><a href="/skills/">스킬 사이트 모음</a></li>
+            <li><a href="/gallery/">산출물 갤러리</a></li>
+            <li><a href="/board/">과제 현황판</a></li>
+          </ul>
+        </div>
+        <div class="fo-col">
+          <h4>연결</h4>
+          <ul>
+            <li><a href="https://github.com/spongeclub/spongeclub_1">GitHub</a></li>
+            <li><a href="/#about">참여 안내</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="fo-bot">
+        <span>© {year} SPONGECLUB — Built every week.</span>
+        <span>SEOUL / REPUBLIC OF KOREA</span>
+      </div>
+    </div>
+  </footer>
+</Layout>

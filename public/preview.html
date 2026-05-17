@@ -1,0 +1,1364 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="color-scheme" content="light" />
+<title>스폰지클럽 — 매주 만들고, 각자 나눈다</title>
+<meta name="description" content="77명이 매주 만들고 각자 나누는 AI 스터디·커뮤니티. 6주째 멈춘 적이 없습니다." />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
+
+<style>
+  :root {
+    --ink:        #F4F0E6;
+    --ink-2:      #EBE6D9;
+    --surface:    #FBF8EE;
+    --surface-2:  #F2EDDE;
+    --line:       #DCD5C2;
+    --line-bright:#BFB7A1;
+    --text:       #1B1916;
+    --text-dim:   #524F47;
+    --muted:      #8A867A;
+    --accent:     #FFE45E;
+    --accent-text:#8C6F00;
+    --accent-deep:#C9A800;
+    --accent-soft:rgba(255, 228, 94, 0.40);
+    --accent-line:rgba(140, 111, 0, 0.30);
+    --on-accent:  #1B1916;
+
+    --font-display: 'Fraunces', 'Pretendard Variable', serif;
+    --font-body:    'Pretendard Variable', 'Pretendard', system-ui, sans-serif;
+    --font-mono:    'JetBrains Mono', ui-monospace, monospace;
+
+    --container: 1280px;
+    --gutter: clamp(20px, 5vw, 56px);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { background: var(--ink); scroll-behavior: smooth; }
+  body {
+    font-family: var(--font-body);
+    color: var(--text);
+    background:
+      radial-gradient(900px 700px at 80% -10%, rgba(255, 228, 94, 0.32), transparent 60%),
+      radial-gradient(700px 500px at -10% 30%, rgba(170, 165, 150, 0.22), transparent 60%),
+      var(--ink);
+    background-attachment: fixed;
+    line-height: 1.5;
+    letter-spacing: -0.005em;
+    font-feature-settings: "ss01", "ss02";
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+  body::before {
+    content: "";
+    position: fixed; inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.45 0'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.6'/></svg>");
+    opacity: 0.10;
+    mix-blend-mode: multiply;
+  }
+
+  a { color: inherit; text-decoration: none; }
+  button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
+  ul { list-style: none; }
+
+  .wrap { max-width: var(--container); margin: 0 auto; padding-inline: var(--gutter); position: relative; z-index: 2; }
+
+  /* ─── NAV ─────────────────────────────────────── */
+  .nav {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(244, 240, 230, 0.82);
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    border-bottom: 1px solid var(--line);
+  }
+  .nav-inner { display: flex; align-items: center; gap: 32px; height: 64px; }
+  .brand {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 18px;
+    letter-spacing: -0.02em;
+    display: inline-flex; align-items: center; gap: 12px;
+  }
+  .brand-mark {
+    width: 22px; height: 22px;
+    border: 1.5px solid var(--accent);
+    border-radius: 50%;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .brand-mark::after {
+    content: ""; position: absolute; inset: 4px;
+    border-radius: 50%;
+    background: var(--accent);
+    opacity: 0.7;
+  }
+  .nav-links {
+    display: flex; align-items: center; gap: 2px;
+    margin-left: auto;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-dim);
+  }
+  .nav-links a {
+    padding: 7px 12px;
+    border-radius: 6px;
+    transition: color 180ms ease, background 180ms ease;
+  }
+  .nav-links a:hover { color: var(--text); background: var(--surface); }
+  .nav-week {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    color: var(--accent-text);
+    border: 1px solid var(--accent-line);
+    background: var(--accent-soft);
+    padding: 6px 10px;
+    border-radius: 4px;
+  }
+
+  /* ─── HERO ────────────────────────────────────── */
+  .hero {
+    padding-top: clamp(64px, 14vh, 150px);
+    padding-bottom: clamp(60px, 10vh, 120px);
+    position: relative;
+  }
+  .hero-head {
+    display: flex; justify-content: space-between;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 56px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--line);
+    flex-wrap: wrap; gap: 12px;
+  }
+  .hero-head b { color: var(--accent-text); font-weight: 500; }
+  .hero h1 {
+    font-family: var(--font-display);
+    font-weight: 340;
+    font-size: clamp(60px, 13vw, 196px);
+    line-height: 0.92;
+    letter-spacing: -0.035em;
+    color: var(--text);
+    font-variation-settings: "opsz" 144;
+  }
+  .hero h1 em {
+    font-style: italic;
+    font-weight: 280;
+    color: var(--accent-text);
+  }
+  .hero-tagline {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 350;
+    font-size: clamp(22px, 3vw, 32px);
+    color: var(--text-dim);
+    margin-top: 32px;
+    max-width: 540px;
+    line-height: 1.35;
+  }
+  .hero-meta {
+    margin-top: 96px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border-top: 1px solid var(--line);
+  }
+  .hero-meta > div {
+    padding: 28px 24px 0 0;
+    border-right: 1px solid var(--line);
+  }
+  .hero-meta > div:last-child { border-right: none; }
+  .hero-meta .n {
+    font-family: var(--font-display);
+    font-size: clamp(40px, 5vw, 64px);
+    line-height: 0.95;
+    font-weight: 340;
+    letter-spacing: -0.04em;
+    color: var(--text);
+  }
+  .hero-meta .l {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    margin-top: 14px;
+  }
+
+  /* ─── SECTION HEADER ──────────────────────────── */
+  .s { padding-top: clamp(80px, 9vw, 130px); }
+  .s-head {
+    display: flex; align-items: end; justify-content: space-between;
+    margin-bottom: 36px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--line);
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .s-num {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    color: var(--accent-text);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .s-title {
+    font-family: var(--font-display);
+    font-size: clamp(34px, 4.5vw, 56px);
+    line-height: 1.02;
+    font-weight: 340;
+    letter-spacing: -0.03em;
+    color: var(--text);
+  }
+  .s-title em { font-style: italic; color: var(--accent-text); font-weight: 310; }
+  .s-desc {
+    max-width: 360px;
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.55;
+  }
+
+  /* ─── HALL OF FAME ────────────────────────────── */
+  .hof-grid {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    overflow: hidden;
+    background: var(--surface);
+  }
+  .hof-feature {
+    padding: clamp(28px, 4vw, 56px);
+    border-right: 1px solid var(--line);
+    display: flex; flex-direction: column; gap: 24px;
+    position: relative;
+    background:
+      radial-gradient(600px 320px at 100% 0%, rgba(255, 228, 94, 0.08), transparent 60%),
+      var(--surface);
+    min-height: 360px;
+  }
+  .hof-tag {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    color: var(--accent-text);
+    align-self: flex-start;
+    text-transform: uppercase;
+  }
+  .hof-week {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--text-dim);
+  }
+  .hof-name {
+    font-family: var(--font-display);
+    font-size: clamp(36px, 5vw, 60px);
+    line-height: 1;
+    font-weight: 320;
+    letter-spacing: -0.025em;
+  }
+  .hof-name em { color: var(--accent-text); font-style: italic; }
+  .hof-blurb {
+    color: var(--text-dim);
+    max-width: 480px;
+    line-height: 1.6;
+    font-size: 14px;
+  }
+  .hof-author {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+    margin-top: auto;
+  }
+  .hof-author b { color: var(--text); font-weight: 500; }
+
+  .hof-past { display: flex; flex-direction: column; }
+  .hof-row {
+    padding: 22px 28px;
+    border-bottom: 1px solid var(--line);
+    display: grid;
+    grid-template-columns: 56px 1fr auto;
+    gap: 16px;
+    align-items: start;
+    transition: background 200ms;
+    cursor: pointer;
+  }
+  .hof-row:last-child { border-bottom: none; }
+  .hof-row:hover { background: var(--surface-2); }
+  .hof-row .glyph {
+    font-family: var(--font-display);
+    font-size: 28px;
+    color: var(--accent-text);
+    line-height: 1;
+  }
+  .hof-row .t {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 18px;
+    color: var(--text);
+    letter-spacing: -0.01em;
+    margin-bottom: 4px;
+  }
+  .hof-row .m {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 0.04em;
+  }
+  .hof-row .w {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+  }
+
+  /* ─── GROWTH (members) ────────────────────────── */
+  .gr-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(238px, 1fr));
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+  }
+  .gr-card {
+    background: var(--ink);
+    padding: 24px;
+    display: flex; flex-direction: column; gap: 14px;
+    transition: background 220ms;
+    cursor: pointer;
+    position: relative;
+    min-height: 220px;
+  }
+  .gr-card:hover { background: var(--surface); }
+  .gr-card:hover .gr-cta { opacity: 1; transform: translateX(0); }
+  .gr-card .team {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: hsl(var(--h, 60) 60% 65%);
+  }
+  .gr-card .name {
+    font-family: var(--font-display);
+    font-size: 30px;
+    line-height: 1;
+    font-weight: 380;
+    letter-spacing: -0.02em;
+  }
+  .gr-card .role {
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+  .gr-card .note {
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.55;
+    margin-top: auto;
+    padding-top: 14px;
+    border-top: 1px dashed var(--line-bright);
+  }
+  .gr-card .note b { color: var(--text); font-weight: 500; }
+  .gr-card .bar {
+    display: flex; gap: 3px;
+    align-items: center;
+  }
+  .gr-card .bar i {
+    display: block; width: 14px; height: 4px;
+    background: var(--line-bright);
+    border-radius: 1px;
+  }
+  .gr-card .bar i.on { background: var(--accent); }
+  .gr-card .bar-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    margin-left: 8px;
+  }
+  .gr-cta {
+    position: absolute; right: 22px; top: 22px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: var(--accent-text);
+    opacity: 0; transform: translateX(-4px);
+    transition: opacity 220ms, transform 220ms;
+  }
+
+  /* ─── GALLERY ─────────────────────────────────── */
+  .ga-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 12px;
+    grid-auto-rows: 170px;
+  }
+  .ga-item {
+    position: relative; overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    padding: 20px;
+    display: flex; flex-direction: column; justify-content: flex-end;
+    transition: transform 220ms ease, border-color 220ms;
+    cursor: pointer;
+    color: #fff;
+  }
+  .ga-item::before {
+    content: ""; position: absolute; inset: 0; z-index: 0;
+    background: linear-gradient(
+      135deg,
+      hsl(var(--h) 65% 30%) 0%,
+      hsl(var(--h) 55% 12%) 100%
+    );
+  }
+  .ga-item::after {
+    content: ""; position: absolute; inset: 0; z-index: 1;
+    background:
+      radial-gradient(circle at 30% 20%, rgba(255,255,255,0.18), transparent 50%),
+      radial-gradient(circle at 80% 90%, rgba(0,0,0,0.45), transparent 60%);
+  }
+  .ga-item > * { position: relative; z-index: 2; }
+  .ga-item:hover { transform: translateY(-3px); border-color: var(--accent-line); }
+  .ga-tag {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    color: rgba(255,255,255,0.75);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .ga-title {
+    font-family: var(--font-display);
+    font-size: 22px;
+    line-height: 1.15;
+    font-weight: 400;
+    color: #fff;
+    letter-spacing: -0.015em;
+  }
+  .ga-meta {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: rgba(255,255,255,0.65);
+    margin-top: 6px;
+    letter-spacing: 0.04em;
+  }
+  /* asymmetric spans */
+  .ga-grid .ga-item:nth-child(1) { grid-column: span 5; grid-row: span 2; }
+  .ga-grid .ga-item:nth-child(2) { grid-column: span 4; }
+  .ga-grid .ga-item:nth-child(3) { grid-column: span 3; }
+  .ga-grid .ga-item:nth-child(4) { grid-column: span 4; }
+  .ga-grid .ga-item:nth-child(5) { grid-column: span 3; }
+  .ga-grid .ga-item:nth-child(6) { grid-column: span 5; grid-row: span 2; }
+  .ga-grid .ga-item:nth-child(7) { grid-column: span 4; }
+  .ga-grid .ga-item:nth-child(8) { grid-column: span 3; }
+
+  /* ─── WEEKLY TEAM REPORTS ─────────────────────── */
+  .we-weeks {
+    display: flex; gap: 6px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+  .we-week {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    padding: 8px 14px;
+    border: 1px solid var(--line);
+    border-radius: 30px;
+    color: var(--text-dim);
+    transition: 180ms;
+  }
+  .we-week.on {
+    background: var(--accent);
+    color: var(--ink);
+    border-color: var(--accent-text);
+    font-weight: 600;
+  }
+  .we-week:hover:not(.on) { color: var(--text); border-color: var(--line-bright); }
+  .we-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 14px;
+  }
+  .we-card {
+    padding: 28px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background: var(--surface);
+    display: flex; flex-direction: column; gap: 16px;
+    transition: 220ms;
+    position: relative;
+  }
+  .we-card:hover {
+    border-color: var(--accent-line);
+    background: var(--surface-2);
+  }
+  .we-card-head {
+    display: flex; justify-content: space-between; align-items: start;
+    gap: 12px;
+  }
+  .we-team {
+    font-family: var(--font-display);
+    font-size: 40px;
+    line-height: 1;
+    font-weight: 360;
+    letter-spacing: -0.025em;
+  }
+  .we-team .ac { color: hsl(var(--h) 70% 65%); font-style: italic; font-weight: 320; }
+  .we-topic {
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+  .we-rate {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    color: var(--text-dim);
+    text-align: right;
+    text-transform: uppercase;
+  }
+  .we-rate b { color: var(--accent-text); font-size: 22px; font-weight: 500; font-family: var(--font-display); display: block; margin-top: 4px; }
+  .we-hi {
+    padding: 14px 16px;
+    background: var(--ink);
+    border-left: 2px solid var(--accent);
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.55;
+  }
+  .we-foot {
+    display: flex; justify-content: space-between;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: auto;
+    padding-top: 8px;
+    letter-spacing: 0.04em;
+  }
+  .we-foot a { color: var(--accent-text); }
+
+  /* ─── REFLECTIONS ─────────────────────────────── */
+  .re-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .re-card {
+    padding: 36px 32px 28px;
+    border-right: 1px solid var(--line);
+    background: var(--surface);
+    display: flex; flex-direction: column;
+    gap: 20px;
+    position: relative;
+    min-height: 280px;
+  }
+  .re-card:last-child { border-right: none; }
+  .re-card::before {
+    content: "“";
+    font-family: var(--font-display);
+    font-size: 92px;
+    line-height: 0.6;
+    color: var(--accent-text);
+    font-weight: 400;
+  }
+  .re-q {
+    font-family: var(--font-display);
+    font-size: 21px;
+    line-height: 1.4;
+    letter-spacing: -0.01em;
+    color: var(--text);
+    font-weight: 380;
+  }
+  .re-by {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+    margin-top: auto;
+  }
+  .re-by b { color: var(--text); font-weight: 500; }
+
+  /* ─── FEED ────────────────────────────────────── */
+  .fe-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 14px;
+  }
+  .fe-card {
+    aspect-ratio: 1 / 1;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    position: relative;
+    overflow: hidden;
+    transition: 220ms;
+    cursor: pointer;
+  }
+  .fe-card::before {
+    content: ""; position: absolute; inset: 0;
+    background:
+      linear-gradient(135deg, hsl(var(--h) 65% 50% / 0.85), hsl(var(--h) 70% 22% / 0.95));
+  }
+  .fe-card::after {
+    content: ""; position: absolute; inset: 0;
+    background:
+      radial-gradient(circle at 25% 22%, rgba(255,255,255,0.35), transparent 50%),
+      radial-gradient(ellipse at 50% 120%, rgba(0,0,0,0.55), transparent 60%);
+  }
+  .fe-card:hover { transform: translateY(-2px); border-color: var(--accent-line); }
+  .fe-content {
+    position: absolute; inset: 0;
+    padding: 18px;
+    display: flex; flex-direction: column; justify-content: space-between;
+    z-index: 2;
+    color: #fff;
+  }
+  .fe-type {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    color: rgba(255,255,255,0.9);
+    text-transform: uppercase;
+    align-self: flex-start;
+    background: rgba(0,0,0,0.35);
+    padding: 5px 9px;
+    border-radius: 2px;
+    backdrop-filter: blur(6px);
+  }
+  .fe-title {
+    font-family: var(--font-display);
+    font-size: 22px;
+    line-height: 1.18;
+    letter-spacing: -0.01em;
+    color: #fff;
+    font-weight: 400;
+  }
+  .fe-meta {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: rgba(255,255,255,0.7);
+    letter-spacing: 0.04em;
+    margin-top: 6px;
+  }
+
+  /* ─── PORTFOLIO CTA ───────────────────────────── */
+  .po-strip {
+    margin-top: 120px;
+    padding: clamp(36px, 6vw, 64px);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background:
+      linear-gradient(135deg, var(--accent-soft), transparent 60%),
+      var(--surface);
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 32px;
+    position: relative;
+    overflow: hidden;
+  }
+  .po-strip::before {
+    content: "PORTFOLIO";
+    position: absolute;
+    right: -40px; top: -60px;
+    font-family: var(--font-display);
+    font-size: 220px;
+    font-weight: 380;
+    font-style: italic;
+    color: rgba(255, 228, 94, 0.05);
+    letter-spacing: -0.05em;
+    pointer-events: none;
+    line-height: 0.9;
+    white-space: nowrap;
+  }
+  .po-num {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    color: var(--accent-text);
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .po-text {
+    font-family: var(--font-display);
+    font-size: clamp(26px, 3.4vw, 40px);
+    font-weight: 340;
+    line-height: 1.18;
+    letter-spacing: -0.025em;
+    max-width: 680px;
+    z-index: 2;
+  }
+  .po-text em { color: var(--accent-text); font-style: italic; }
+  .po-cta {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 14px 22px;
+    border: 1px solid var(--accent);
+    color: var(--accent-text);
+    border-radius: 2px;
+    white-space: nowrap;
+    transition: 200ms;
+    z-index: 2;
+  }
+  .po-cta:hover { background: var(--accent); color: var(--ink); }
+
+  /* ─── FOOTER ──────────────────────────────────── */
+  footer {
+    margin-top: 140px;
+    padding: 80px 0 60px;
+    border-top: 1px solid var(--line);
+  }
+  .fo-grid {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr 1fr;
+    gap: 48px;
+    margin-bottom: 80px;
+  }
+  .fo-pitch {
+    font-family: var(--font-display);
+    font-weight: 320;
+    font-size: clamp(30px, 4vw, 48px);
+    line-height: 1.1;
+    letter-spacing: -0.025em;
+    max-width: 540px;
+  }
+  .fo-pitch em { color: var(--accent-text); font-style: italic; }
+  .fo-col h4 {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 16px;
+    font-weight: 500;
+  }
+  .fo-col ul { display: flex; flex-direction: column; gap: 10px; }
+  .fo-col a { font-size: 14px; color: var(--text-dim); transition: 180ms; }
+  .fo-col a:hover { color: var(--accent-text); }
+  .fo-bot {
+    display: flex; justify-content: space-between; align-items: center;
+    padding-top: 24px;
+    border-top: 1px solid var(--line);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    flex-wrap: wrap; gap: 12px;
+  }
+
+  /* ─── ANIMATIONS ──────────────────────────────── */
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .reveal { animation: rise 800ms cubic-bezier(0.22, 0.94, 0.34, 1) both; }
+  .d1 { animation-delay: 0.05s; }
+  .d2 { animation-delay: 0.15s; }
+  .d3 { animation-delay: 0.25s; }
+  .d4 { animation-delay: 0.40s; }
+
+  /* ─── RESPONSIVE ──────────────────────────────── */
+  @media (max-width: 900px) {
+    .hero-meta { grid-template-columns: repeat(2, 1fr); }
+    .hero-meta > div:nth-child(2) { border-right: none; }
+    .hero-meta > div { padding-right: 16px; }
+    .hof-grid { grid-template-columns: 1fr; }
+    .hof-feature { border-right: none; border-bottom: 1px solid var(--line); }
+    .ga-grid { grid-template-columns: repeat(2, 1fr); grid-auto-rows: 180px; }
+    .ga-grid .ga-item { grid-column: span 1 !important; grid-row: auto !important; }
+    .fo-grid { grid-template-columns: 1fr 1fr; gap: 32px; }
+    .fo-pitch { grid-column: span 2; }
+    .po-strip { flex-direction: column; align-items: flex-start; }
+  }
+  @media (max-width: 620px) {
+    .nav-links { display: none; }
+    .re-grid { grid-template-columns: 1fr; }
+    .re-card { border-right: none; border-bottom: 1px solid var(--line); }
+    .re-card:last-child { border-bottom: none; }
+  }
+
+  /* a11y */
+  a:focus-visible, button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══ NAV ═══ -->
+<nav class="nav">
+  <div class="wrap nav-inner">
+    <a href="#top" class="brand">
+      <span class="brand-mark"></span>
+      <span>스폰지클럽</span>
+    </a>
+    <div class="nav-links">
+      <a href="#mvp">명예의 전당</a>
+      <a href="#growth">성장 기록</a>
+      <a href="#gallery">갤러리</a>
+      <a href="#weekly">주차 레포트</a>
+      <a href="#reflections">회고</a>
+      <a href="#feed">피드</a>
+    </div>
+    <span class="nav-week">WEEK 06</span>
+  </div>
+</nav>
+
+<main class="wrap" id="top">
+
+<!-- ═══ HERO ═══ -->
+<section class="hero">
+  <div class="hero-head reveal d1">
+    <span>스폰지클럽 — <b>매주 만들고, 각자 나눈다</b></span>
+    <span>ISSUE No. 06 · 2026 / 05 / 14</span>
+  </div>
+  <h1 class="reveal d2">
+    매주 만들고,<br />
+    <em>각자</em> 나눈다.
+  </h1>
+  <p class="hero-tagline reveal d3">
+    77명이 6주째 멈춘 적이 없다.<br />
+    이 페이지는 그들이 만든 것을 모아둔 곳.
+  </p>
+  <div class="hero-meta reveal d4">
+    <div><div class="n">06</div><div class="l">진행 주차 / Week</div></div>
+    <div><div class="n">77</div><div class="l">멤버 / Members</div></div>
+    <div><div class="n">412</div><div class="l">누적 제출 / Submits</div></div>
+    <div><div class="n">538</div><div class="l">인사이트 / Notes</div></div>
+  </div>
+</section>
+
+<!-- ═══ 01. HALL OF FAME ═══ -->
+<section class="s" id="mvp">
+  <div class="s-head">
+    <div>
+      <div class="s-num">01 — 명예의 전당</div>
+      <h2 class="s-title">이번주의 <em>MVP</em></h2>
+    </div>
+    <p class="s-desc">매주 회의에서 뽑힌 그 주의 한 명. 명예는 누적되고, 페이지는 사라지지 않는다.</p>
+  </div>
+  <div class="hof-grid">
+    <div class="hof-feature">
+      <div class="hof-tag">★ WEEK 06 MVP</div>
+      <div class="hof-week">2026.12.07</div>
+      <h3 class="hof-name">AX PM 의사결정<br /><em>프레임워크 v2</em></h3>
+      <p class="hof-blurb">
+        실제 회의에 적용해서 검증한 PM용 의사결정 도구.
+        노션 템플릿까지 같이 공개해서 다른 조에서도 바로 가져다 쓸 수 있게 했다.
+        뽑힌 이유: "도구를 만들고, 그 도구로 자기 결정까지 검증한 흔치 않은 케이스."
+      </p>
+      <div class="hof-author"><b>비비안</b> &nbsp;·&nbsp; 1조 · AX PM &nbsp;·&nbsp; 6주 연속 제출</div>
+    </div>
+    <div class="hof-past">
+      <a class="hof-row" href="#">
+        <span class="glyph">◆</span>
+        <span>
+          <div class="t">월간 런칭 #1 — 보석함</div>
+          <div class="m">오웬 · 5조 · 70명 베타 가입</div>
+        </span>
+        <span class="w">W05 / 11.30</span>
+      </a>
+      <a class="hof-row" href="#">
+        <span class="glyph">◇</span>
+        <span>
+          <div class="t">Sullivan OS — 첫 시연</div>
+          <div class="m">흐민 · 3조 · 라이브 데모 + 12명 적용</div>
+        </span>
+        <span class="w">W04 / 11.23</span>
+      </a>
+      <a class="hof-row" href="#">
+        <span class="glyph">○</span>
+        <span>
+          <div class="t">AAA 하네스 → 스폰지 포팅</div>
+          <div class="m">다다 · 4조 · 77명 인프라 베이스</div>
+        </span>
+        <span class="w">W03 / 11.16</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 02. GROWTH ═══ -->
+<section class="s" id="growth">
+  <div class="s-head">
+    <div>
+      <div class="s-num">02 — 개인별 성장 기록</div>
+      <h2 class="s-title">누가, 매주 <em>무엇을</em> 쌓았는가</h2>
+    </div>
+    <p class="s-desc">각자의 6주는 다르게 흐른다. 멤버 이름을 누르면 그 사람의 6주가 한 페이지에 — 그게 곧 포트폴리오.</p>
+  </div>
+
+  <div class="gr-grid">
+    <!-- 12 dummy members -->
+    <a class="gr-card" style="--h:12" href="#">
+      <span class="team">1조</span>
+      <div class="name">비비안</div>
+      <div class="role">AX PM · 프로덕트 구조 설계</div>
+      <div class="bar">
+        <i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i>
+        <span class="bar-label">6/6 WEEKS</span>
+      </div>
+      <div class="note">최근 노트 — <b>PM 의사결정 노이즈 줄이기</b></div>
+      <span class="gr-cta">→ 포트폴리오</span>
+    </a>
+    <a class="gr-card" style="--h:38" href="#">
+      <span class="team">2조</span>
+      <div class="name">띵크</div>
+      <div class="role">콘텐츠 마케팅 · Vercel</div>
+      <div class="bar">
+        <i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i>
+        <span class="bar-label">6/6 WEEKS</span>
+      </div>
+      <div class="note">최근 노트 — <b>자동배포 파이프라인 v2</b></div>
+      <span class="gr-cta">→ 포트폴리오</span>
+    </a>
+    <a class="gr-card" style="--h:64" href="#">
+      <span class="team">3조</span>
+      <div class="name">흐민</div>
+      <div class="role">OS 철학 · Sullivan</div>
+      <div class="bar">
+        <i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i>
+        <span class="bar-label">6/6 WEEKS</span>
+      </div>
+      <div class="note">최근 노트 — <b>Sullivan 위클리 정착</b></div>
+      <span class="gr-cta">→ 포트폴리오</span>
+    </a>
+    <a class="gr-card" style="--h:175" href="#">
+      <span class="team">4조</span>
+      <div class="name">다다</div>
+      <div class="role">아카이브 · OPS · 자동화</div>
+      <div class="bar">
+        <i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i>
+        <span class="bar-label">6/6 WEEKS</span>
+      </div>
+      <div class="note">최근 노트 — <b>/submit 자동화 완성</b></div>
+      <span class="gr-cta">→ 포트폴리오</span>
+    </a>
+    <a class="gr-card" style="--h:212" href="#">
+      <span class="team">5조</span>
+      <div class="name">오웬</div>
+      <div class="role">월간 런칭</div>
+      <div class="bar">
+        <i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i>
+        <span class="bar-label">6/6 WEEKS</span>
+      </div>
+      <div class="note">최근 노트 — <b>두 번째 프로덕트 기획</b></div>
+      <span class="gr-cta">→ 포트폴리오</span>
+    </a>
+    <a class="gr-card" style="--h:290" href="#">
+      <span class="team">6조</span>
+      <div class="name">다니</div>
+      <div class="role">운영 총괄 · 콘텐츠 시스템</div>
+      <div class="bar">
+        <i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i>
+        <span class="bar-label">6/6 WEEKS</span>
+      </div>
+      <div class="note">최근 노트 — <b>카드뉴스 워크플로우 v3</b></div>
+      <span class="gr-cta">→ 포트폴리오</span>
+    </a>
+    <a class="gr-card" style="--h:38" href="#">
+      <span class="team">2조</span>
+      <div class="name">에밀리</div>
+      <div class="role">셀피쉬크루 · 브랜드</div>
+      <div class="bar">
+        <i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i>
+        <span class="bar-label">5/6 WEEKS</span>
+      </div>
+      <div class="note">최근 노트 — <b>브랜드 톤 가이드</b></div>
+      <span class="gr-cta">→ 포트폴리오</span>
+    </a>
+    <a class="gr-card" style="--h:12" href="#">
+      <span class="team">1조</span>
+      <div class="name">Amy</div>
+      <div class="role">리서치 · PM</div>
+      <div class="bar">
+        <i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i>
+        <span class="bar-label">6/6 WEEKS</span>
+      </div>
+      <div class="note">최근 노트 — <b>경쟁 PM 도구 비교</b></div>
+      <span class="gr-cta">→ 포트폴리오</span>
+    </a>
+    <a class="gr-card" style="--h:38" href="#">
+      <span class="team">2조</span>
+      <div class="name">제제</div>
+      <div class="role">에디터 · 카드뉴스</div>
+      <div class="bar">
+        <i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i>
+        <span class="bar-label">4/6 WEEKS</span>
+      </div>
+      <div class="note">최근 노트 — <b>인스타 카드뉴스 5장 발행</b></div>
+      <span class="gr-cta">→ 포트폴리오</span>
+    </a>
+    <a class="gr-card" style="--h:64" href="#">
+      <span class="team">3조</span>
+      <div class="name">신연수</div>
+      <div class="role">학습 기록</div>
+      <div class="bar">
+        <i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i>
+        <span class="bar-label">6/6 WEEKS</span>
+      </div>
+      <div class="note">최근 노트 — <b>주차별 학습 곡선 정리</b></div>
+      <span class="gr-cta">→ 포트폴리오</span>
+    </a>
+    <a class="gr-card" style="--h:64" href="#">
+      <span class="team">3조</span>
+      <div class="name">Nina</div>
+      <div class="role">AI 실험 · 라우팅</div>
+      <div class="bar">
+        <i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i>
+        <span class="bar-label">5/6 WEEKS</span>
+      </div>
+      <div class="note">최근 노트 — <b>에이전트 라우팅 실험</b></div>
+      <span class="gr-cta">→ 포트폴리오</span>
+    </a>
+    <a class="gr-card" style="--h:64" href="#">
+      <span class="team">3조</span>
+      <div class="name">솔라</div>
+      <div class="role">데일리 빌더</div>
+      <div class="bar">
+        <i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i>
+        <span class="bar-label">6/6 WEEKS</span>
+      </div>
+      <div class="note">최근 노트 — <b>오늘의 작은 빌드 33일째</b></div>
+      <span class="gr-cta">→ 포트폴리오</span>
+    </a>
+  </div>
+</section>
+
+<!-- ═══ 03. GALLERY ═══ -->
+<section class="s" id="gallery">
+  <div class="s-head">
+    <div>
+      <div class="s-num">03 — 이런 걸 만들었어요</div>
+      <h2 class="s-title">스폰지 <em>갤러리</em></h2>
+    </div>
+    <p class="s-desc">매주 만들어진 프로덕트·도구·콘텐츠. 형태가 다르지만 같은 리듬을 공유한다.</p>
+  </div>
+  <div class="ga-grid">
+    <a class="ga-item" style="--h:64" href="#">
+      <span class="ga-tag">★ Featured · Product</span>
+      <div class="ga-title">Sullivan OS — 개인 운영체제</div>
+      <div class="ga-meta">흐민 · 3조 · WEEK 04</div>
+    </a>
+    <a class="ga-item" style="--h:212" href="#">
+      <span class="ga-tag">Product</span>
+      <div class="ga-title">보석함 (Beta)</div>
+      <div class="ga-meta">오웬 · 5조 · WEEK 05</div>
+    </a>
+    <a class="ga-item" style="--h:38" href="#">
+      <span class="ga-tag">Content</span>
+      <div class="ga-title">카드뉴스 11장</div>
+      <div class="ga-meta">띵크 · 2조</div>
+    </a>
+    <a class="ga-item" style="--h:12" href="#">
+      <span class="ga-tag">Tool</span>
+      <div class="ga-title">PM 의사결정 도구</div>
+      <div class="ga-meta">비비안 · 1조 · WEEK 06</div>
+    </a>
+    <a class="ga-item" style="--h:175" href="#">
+      <span class="ga-tag">Infrastructure</span>
+      <div class="ga-title">/submit 자동화</div>
+      <div class="ga-meta">다다 · 4조</div>
+    </a>
+    <a class="ga-item" style="--h:290" href="#">
+      <span class="ga-tag">★ Ops</span>
+      <div class="ga-title">운영 캘린더 v2</div>
+      <div class="ga-meta">다니 · 6조 · 6주 무결석</div>
+    </a>
+    <a class="ga-item" style="--h:64" href="#">
+      <span class="ga-tag">Report</span>
+      <div class="ga-title">학습 곡선 리포트</div>
+      <div class="ga-meta">신연수 · 3조</div>
+    </a>
+    <a class="ga-item" style="--h:64" href="#">
+      <span class="ga-tag">Experiment</span>
+      <div class="ga-title">에이전트 라우팅</div>
+      <div class="ga-meta">Nina · 3조</div>
+    </a>
+  </div>
+</section>
+
+<!-- ═══ 04. WEEKLY TEAM REPORTS ═══ -->
+<section class="s" id="weekly">
+  <div class="s-head">
+    <div>
+      <div class="s-num">04 — 주차별 조별 레포트</div>
+      <h2 class="s-title">조마다 <em>다른</em> 한 주.</h2>
+    </div>
+    <p class="s-desc">조별 주제는 모두 다르다. 매주 끝나면 조마다 한 장의 레포트가 자동 생성된다.</p>
+  </div>
+
+  <div class="we-weeks">
+    <button class="we-week">WEEK 01</button>
+    <button class="we-week">WEEK 02</button>
+    <button class="we-week">WEEK 03</button>
+    <button class="we-week">WEEK 04</button>
+    <button class="we-week">WEEK 05</button>
+    <button class="we-week on">WEEK 06</button>
+  </div>
+
+  <div class="we-grid">
+    <article class="we-card" style="--h:12">
+      <div class="we-card-head">
+        <h3 class="we-team">1조 <span class="ac">Vivian</span></h3>
+        <div class="we-rate">제출률<b>100%</b></div>
+      </div>
+      <p class="we-topic">AX PM · 프로덕트 구조 설계</p>
+      <div class="we-hi">PM 의사결정 프레임워크 적용 사례 6건. MVP 배출 조.</div>
+      <div class="we-foot"><span>13 / 13 명</span><a href="#">조 레포트 →</a></div>
+    </article>
+
+    <article class="we-card" style="--h:38">
+      <div class="we-card-head">
+        <h3 class="we-team">2조 <span class="ac">Think</span></h3>
+        <div class="we-rate">제출률<b>92%</b></div>
+      </div>
+      <p class="we-topic">콘텐츠 마케팅 · Vercel 자동배포</p>
+      <div class="we-hi">카드뉴스 발행 11건 + 자동배포 안정화 단계 진입.</div>
+      <div class="we-foot"><span>12 / 13 명</span><a href="#">조 레포트 →</a></div>
+    </article>
+
+    <article class="we-card" style="--h:64">
+      <div class="we-card-head">
+        <h3 class="we-team">3조 <span class="ac">Hmin</span></h3>
+        <div class="we-rate">제출률<b>100%</b></div>
+      </div>
+      <p class="we-topic">OS 설계 철학 · Sullivan 프로젝트</p>
+      <div class="we-hi">Sullivan v0.3 시연 + 12명 적용 완료. 데일리 빌더 누적 33일.</div>
+      <div class="we-foot"><span>13 / 13 명</span><a href="#">조 레포트 →</a></div>
+    </article>
+
+    <article class="we-card" style="--h:175">
+      <div class="we-card-head">
+        <h3 class="we-team">4조 <span class="ac">Dada</span></h3>
+        <div class="we-rate">제출률<b>92%</b></div>
+      </div>
+      <p class="we-topic">레포·자동화·아카이브·OPS 시스템화</p>
+      <div class="we-hi">/submit 자동 PR·머지 완성. 77명이 이 위에서 굴러간다.</div>
+      <div class="we-foot"><span>12 / 13 명</span><a href="#">조 레포트 →</a></div>
+    </article>
+
+    <article class="we-card" style="--h:212">
+      <div class="we-card-head">
+        <h3 class="we-team">5조 <span class="ac">Owen</span></h3>
+        <div class="we-rate">제출률<b>83%</b></div>
+      </div>
+      <p class="we-topic">월 1개 유저 프로덕트 런칭</p>
+      <div class="we-hi">월간 런칭 #1 출시. 70명 베타 가입 · 다음 프로덕트 기획 착수.</div>
+      <div class="we-foot"><span>10 / 12 명</span><a href="#">조 레포트 →</a></div>
+    </article>
+
+    <article class="we-card" style="--h:290">
+      <div class="we-card-head">
+        <h3 class="we-team">6조 <span class="ac">Danny</span></h3>
+        <div class="we-rate">제출률<b>100%</b></div>
+      </div>
+      <p class="we-topic">운영 총괄 · 콘텐츠 운영 시스템</p>
+      <div class="we-hi">운영 캘린더 v2 가동. 6주 무결석. 카드뉴스 발행 캐던스 안정화.</div>
+      <div class="we-foot"><span>13 / 13 명</span><a href="#">조 레포트 →</a></div>
+    </article>
+  </div>
+</section>
+
+<!-- ═══ 05. REFLECTIONS ═══ -->
+<section class="s" id="reflections">
+  <div class="s-head">
+    <div>
+      <div class="s-num">05 — 회고 & 후기</div>
+      <h2 class="s-title">우리가 우리에게 <em>한 말</em></h2>
+    </div>
+    <p class="s-desc">매주 회의 끝에 한 줄. 6주가 쌓이면 자기 변화가 보인다.</p>
+  </div>
+  <div class="re-grid">
+    <article class="re-card">
+      <p class="re-q">6주 동안 멈춘 적이 없다는 사실이 가장 신기하다. 매주 뭔가는 만들고 있다.</p>
+      <div class="re-by"><b>솔라</b> · 3조 · WEEK 06 회고</div>
+    </article>
+    <article class="re-card">
+      <p class="re-q">혼자였으면 절반도 못 갔을 거다. 77명이 굴러가는 리듬이 본인 리듬이 된다.</p>
+      <div class="re-by"><b>오웬</b> · 5조 · WEEK 05 회고</div>
+    </article>
+    <article class="re-card">
+      <p class="re-q">스폰지는 '흡수'라는 뜻이지만, 실제로 가장 많이 한 건 짜내는 일이었다.</p>
+      <div class="re-by"><b>흐민</b> · 3조 · WEEK 04 회고</div>
+    </article>
+  </div>
+</section>
+
+<!-- ═══ 06. SNS FEED ═══ -->
+<section class="s" id="feed">
+  <div class="s-head">
+    <div>
+      <div class="s-num">06 — 스폰지 피드</div>
+      <h2 class="s-title">매주의 <em>카드뉴스</em></h2>
+    </div>
+    <p class="s-desc">인스타그램·SNS에 공유된 카드뉴스 모음. 스폰지만의 톤이 만들어진다.</p>
+  </div>
+  <div class="fe-grid">
+    <a class="fe-card" style="--h:212" href="#">
+      <div class="fe-content">
+        <span class="fe-type">카드뉴스 · W06</span>
+        <div>
+          <div class="fe-title">월간 런칭 #1 — 보석함</div>
+          <div class="fe-meta">오웬 · 5조</div>
+        </div>
+      </div>
+    </a>
+    <a class="fe-card" style="--h:38" href="#">
+      <div class="fe-content">
+        <span class="fe-type">카드뉴스 · W06</span>
+        <div>
+          <div class="fe-title">콘텐츠 자동배포 6단계</div>
+          <div class="fe-meta">띵크 · 2조</div>
+        </div>
+      </div>
+    </a>
+    <a class="fe-card" style="--h:290" href="#">
+      <div class="fe-content">
+        <span class="fe-type">인스타 · W05</span>
+        <div>
+          <div class="fe-title">운영자의 5주 리듬</div>
+          <div class="fe-meta">다니 · 6조</div>
+        </div>
+      </div>
+    </a>
+    <a class="fe-card" style="--h:64" href="#">
+      <div class="fe-content">
+        <span class="fe-type">카드뉴스 · W05</span>
+        <div>
+          <div class="fe-title">Sullivan 첫 데모</div>
+          <div class="fe-meta">흐민 · 3조</div>
+        </div>
+      </div>
+    </a>
+    <a class="fe-card" style="--h:175" href="#">
+      <div class="fe-content">
+        <span class="fe-type">카드뉴스 · W04</span>
+        <div>
+          <div class="fe-title">레포 자동화의 모든 것</div>
+          <div class="fe-meta">다다 · 4조</div>
+        </div>
+      </div>
+    </a>
+    <a class="fe-card" style="--h:12" href="#">
+      <div class="fe-content">
+        <span class="fe-type">인스타 · W04</span>
+        <div>
+          <div class="fe-title">PM 의사결정 도구</div>
+          <div class="fe-meta">비비안 · 1조</div>
+        </div>
+      </div>
+    </a>
+  </div>
+</section>
+
+<!-- ═══ PORTFOLIO CTA ═══ -->
+<section class="po-strip">
+  <div>
+    <div class="po-num">07 — 포트폴리오</div>
+    <p class="po-text">
+      여기 쌓인 6주는<br />
+      <em>이력서 한 줄</em>이 됩니다.
+    </p>
+  </div>
+  <a class="po-cta" href="#growth">내 페이지 보기 →</a>
+</section>
+
+</main>
+
+<!-- ═══ FOOTER ═══ -->
+<footer>
+  <div class="wrap">
+    <div class="fo-grid">
+      <div class="fo-pitch">
+        매주 만들고,<br /><em>각자</em> 나눈다.
+      </div>
+      <div class="fo-col">
+        <h4>둘러보기</h4>
+        <ul>
+          <li><a href="#mvp">명예의 전당</a></li>
+          <li><a href="#growth">개인 성장 기록</a></li>
+          <li><a href="#gallery">갤러리</a></li>
+          <li><a href="#weekly">주차 레포트</a></li>
+          <li><a href="#reflections">회고</a></li>
+          <li><a href="#feed">피드</a></li>
+        </ul>
+      </div>
+      <div class="fo-col">
+        <h4>조</h4>
+        <ul>
+          <li><a href="#">1조 · AX PM</a></li>
+          <li><a href="#">2조 · 콘텐츠 마케팅</a></li>
+          <li><a href="#">3조 · OS 철학</a></li>
+          <li><a href="#">4조 · 아카이브 OPS</a></li>
+          <li><a href="#">5조 · 월간 런칭</a></li>
+          <li><a href="#">6조 · 운영 시스템</a></li>
+        </ul>
+      </div>
+      <div class="fo-col">
+        <h4>연결</h4>
+        <ul>
+          <li><a href="#">GitHub</a></li>
+          <li><a href="#">인스타그램</a></li>
+          <li><a href="#">RSS</a></li>
+          <li><a href="#">참여 신청</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="fo-bot">
+      <span>© 2026 SPONGECLUB — Built every week.</span>
+      <span>SEOUL / REPUBLIC OF KOREA</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // simple week tab toggle
+  document.querySelectorAll('.we-week').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.we-week').forEach(b => b.classList.remove('on'));
+      btn.classList.add('on');
+    });
+  });
+
+  // smooth scroll active highlight
+  const sections = ['mvp','growth','gallery','weekly','reflections','feed'];
+  const navLinks = document.querySelectorAll('.nav-links a');
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        navLinks.forEach(a => {
+          a.style.color = a.getAttribute('href') === '#' + e.target.id
+            ? 'var(--accent)'
+            : '';
+        });
+      }
+    });
+  }, { rootMargin: '-40% 0px -55% 0px' });
+  sections.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) obs.observe(el);
+  });
+</script>
+
+</body>
+</html>
