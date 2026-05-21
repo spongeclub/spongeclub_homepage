@@ -80,7 +80,6 @@ const year = new Date().getFullYear();
         <a href="/keywords/">키워드</a>
         <a href="/skills/">스킬모음</a>
         <a href="/gallery/">갤러리</a>
-        <a href="/board/">현황판</a>
       </div>
       {latest && <span class="nav-vol">{vol(latest.weekNumber)}</span>}
     </div>
@@ -96,23 +95,56 @@ const year = new Date().getFullYear();
 
     {hasData && (
       <>
-        <!-- ═══ HERO / 이번 주 MVP ═══ -->
-        <section class="hero hero-mvp" id="about">
+        <!-- ═══ HERO / 소개 ═══ -->
+        <section class="hero" id="about">
           <div class="hero-deco" aria-hidden="true">
             <span class="d-c"></span>
             <span class="d-s"></span>
           </div>
           <div class="hero-kicker reveal d1">
-            <span>스폰지클럽 — <b>이번 주의 MVP</b></span>
+            <span>스폰지클럽 — <b>매주 만들고, 각자 나눈다</b></span>
             <span>{latest && vol(latest.weekNumber)} · {year}</span>
           </div>
           <h1 class="hero-title reveal d2">
-            이번 주 <em>MVP</em>
+            매주 만들고,<br />
+            <em>각자</em> 나눈다.
           </h1>
           <p class="hero-lede reveal d3">
-            6개 조에서 한 명씩 — 이번 호의 6인을 골랐습니다.
+            {totalMembers}명이 매주 무언가를 만들고, 그 과정을 기록하는 AI 빌더 커뮤니티.<br />
+            이 페이지는 매주 한 호씩 발행되는 그 기록입니다.
           </p>
-          <div class="mvp-grid reveal d4">
+          <div class="hero-stats reveal d4">
+            <div>
+              <div class="n">{String(totalWeeks).padStart(2, '0')}</div>
+              <div class="l">발행 호 / Issues</div>
+            </div>
+            <div>
+              <div class="n">{totalMembers}</div>
+              <div class="l">멤버 / Members</div>
+            </div>
+            <div>
+              <div class="n">{totalSubmissions}</div>
+              <div class="l">누적 기록 / Records</div>
+            </div>
+            <div>
+              <div class="n">06</div>
+              <div class="l">조 / Teams</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ═══ 이번 주 MVP ═══ -->
+        <section class="s" id="mvp">
+          <div class="s-head">
+            <div>
+              <div class="s-num">{latest && vol(latest.weekNumber)} — MVP</div>
+              <h2 class="s-title">이번 주 <em>MVP</em></h2>
+            </div>
+            <p class="s-desc">
+              6개 조에서 한 명씩 — 이번 호의 6인.
+            </p>
+          </div>
+          <div class="mvp-grid">
             {weeklyMvps.map((m) => (
               <a class="mvp-card" href={m.url}>
                 <div class="mvp-team">{m.team}</div>
@@ -156,45 +188,6 @@ const year = new Date().getFullYear();
             </div>
           </section>
         )}
-
-        <!-- ═══ 운영 방식 3스텝 ═══ -->
-        <section class="s">
-          <div class="s-head">
-            <div>
-              <div class="s-num">어떻게 굴러가나</div>
-              <h2 class="s-title">매주 같은 <em>리듬</em></h2>
-            </div>
-            <p class="s-desc">
-              스폰지클럽은 한 주를 세 동작으로 돈다. 6주째 이 리듬이 멈춘 적 없다.
-            </p>
-          </div>
-          <div class="howto">
-            <div class="howto-step">
-              <span class="step-n">STEP 01</span>
-              <span class="step-t">만든다</span>
-              <p class="step-d">
-                각자 한 주의 미션을 정하고, 손에 잡히는 결과물을 만든다.
-                도구·프로덕트·콘텐츠 — 형태는 자유다.
-              </p>
-            </div>
-            <div class="howto-step">
-              <span class="step-n">STEP 02</span>
-              <span class="step-t">나눈다</span>
-              <p class="step-d">
-                조별 공유회에서 보여주고, 서로 피드백을 주고받는다.
-                혼자 가던 길이 같이 가는 길이 된다.
-              </p>
-            </div>
-            <div class="howto-step">
-              <span class="step-n">STEP 03</span>
-              <span class="step-t">남긴다</span>
-              <p class="step-d">
-                만든 과정과 인사이트를 노트로 기록한다.
-                그 기록이 모여 이 매거진의 한 호가 된다.
-              </p>
-            </div>
-          </div>
-        </section>
 
         <!-- ═══ 이번 호 ═══ -->
         {latest && (
@@ -282,7 +275,6 @@ const year = new Date().getFullYear();
             <li><a href="/keywords/">키워드 분석</a></li>
             <li><a href="/skills/">스킬 사이트 모음</a></li>
             <li><a href="/gallery/">산출물 갤러리</a></li>
-            <li><a href="/board/">과제 현황판</a></li>
           </ul>
         </div>
         <div class="fo-col">
