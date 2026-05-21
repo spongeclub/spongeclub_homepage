@@ -1,69 +1,47 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { extractSharedLinks, type SharedLink } from '../lib/skills';
+import { loadCuratedSkills, groupByCategory, type CuratedSkill } from '../lib/curated-skills';
 
-const links = extractSharedLinks();
+const skills = loadCuratedSkills();
+const groups = groupByCategory(skills);
 
-const byCategory = (cat: string) =>
-  links.filter((l: SharedLink) => l.category === cat);
-
-const skill    = byCategory('skill');
-const tool     = byCategory('tool');
-const content  = byCategory('content');
-const showcase = byCategory('showcase');
-
-const sections: Array<{
-  id: string;
-  num: string;
-  title: string;
-  titleEm: string;
-  desc: string;
-  items: SharedLink[];
-}> = [
-  {
-    id: 'skill',
+const CATEGORY_META: Record<string, { num: string; titleA: string; titleB: string; desc: string }> = {
+  '클로드코드': {
     num: '01',
-    title: '스킬·',
-    titleEm: '레포',
-    desc: '멤버들이 공유한 Claude 스킬, 플러그인, GitHub 레포지토리',
-    items: skill,
+    titleA: '클로드',
+    titleB: '코드',
+    desc: 'Claude Code 자체를 더 잘 쓰게 해주는 스킬·플러그인',
   },
-  {
-    id: 'tool',
+  '콘텐츠마케팅': {
     num: '02',
-    title: '도구·',
-    titleEm: '서비스',
-    desc: '실습에 활용된 SaaS, 생산성 툴, 플랫폼',
-    items: tool,
+    titleA: '콘텐츠·',
+    titleB: '마케팅',
+    desc: '카드뉴스, 영상, 블로그, 캐러셀까지 — 결과물을 만들어내는 스킬',
   },
-  {
-    id: 'content',
+  '개발도구': {
     num: '03',
-    title: '콘텐츠·',
-    titleEm: '아티클',
-    desc: '유튜브, 뉴스레터, 블로그 등 멤버들이 추천한 읽기·보기 자료',
-    items: content,
+    titleA: '개발·',
+    titleB: '도구',
+    desc: '코드 작업 흐름을 매끄럽게 해주는 MCP·에이전트 도구',
   },
-  {
-    id: 'showcase',
+  '생산성': {
     num: '04',
-    title: '멤버',
-    titleEm: '산출물',
-    desc: '멤버들이 직접 배포한 사이트와 프로젝트',
-    items: showcase,
+    titleA: '생산',
+    titleB: '성',
+    desc: '문서·프레젠테이션·운영 자동화 도구',
   },
-];
+};
 
 function hostLabel(url: string): string {
-  try {
-    return new URL(url).hostname.replace(/^www\./, '');
-  } catch {
-    return url.slice(0, 40);
-  }
+  try { return new URL(url).hostname.replace(/^www\./, ''); }
+  catch { return url.slice(0, 40); }
 }
+
+const totalReviewed = skills.filter((s) => s.postType === '써본후기').length;
+const totalShared = skills.filter((s) => s.postType === '공유').length;
 ---
 
-<Layout title="스킬 사이트 모음 — 스폰지클럽" bodyClass="mag">
+<Layout title="스킬 모음 — 스폰지클럽" bodyClass="mag">
   <!-- ═══ NAV ═══ -->
   <nav class="nav">
     <div class="wrap nav-inner">
@@ -88,26 +66,16 @@ function hostLabel(url: string): string {
       <div class="ss-label">PAGE OVERVIEW</div>
       <div class="ss-body">
         <p class="ss-lead">
-          미션 노트에서 수집된 외부 링크 <strong>{links.length}개</strong> —
-          멤버 77명이 공유한 스킬·도구·콘텐츠·산출물을 카테고리별로 정리했습니다.
+          데굴데굴 조가 큐레이션한 <strong>{skills.length}개</strong>의 스킬·도구·가이드 —
+          멤버들이 직접 써본 후기 <strong>{totalReviewed}건</strong>과 공유 자료 <strong>{totalShared}건</strong>을 카테고리별로 정리했습니다.
         </p>
         <div class="ss-stats">
-          <div class="ss-stat">
-            <span class="ss-n">{skill.length}</span>
-            <span class="ss-l">스킬·레포</span>
-          </div>
-          <div class="ss-stat">
-            <span class="ss-n">{tool.length}</span>
-            <span class="ss-l">도구·서비스</span>
-          </div>
-          <div class="ss-stat">
-            <span class="ss-n">{content.length}</span>
-            <span class="ss-l">콘텐츠·아티클</span>
-          </div>
-          <div class="ss-stat">
-            <span class="ss-n">{showcase.length}</span>
-            <span class="ss-l">멤버 산출물</span>
-          </div>
+          {groups.map((g) => (
+            <div class="ss-stat">
+              <span class="ss-n">{g.items.length}</span>
+              <span class="ss-l">{g.category}</span>
+            </div>
+          ))}
         </div>
       </div>
     </div>
@@ -116,76 +84,109 @@ function hostLabel(url: string): string {
     <section class="s" style="padding-top: clamp(40px, 7vh, 72px);">
       <div class="s-head">
         <div>
-          <div class="s-num">유용한 사이트 모음</div>
-          <h1 class="s-title">스킬&nbsp;<em>&amp;</em>&nbsp;리소스</h1>
+          <div class="s-num">데굴데굴 큐레이션</div>
+          <h1 class="s-title">스킬&nbsp;<em>모음</em></h1>
         </div>
         <p class="s-desc">
-          77명의 멤버가 미션 과정에서 공유한 링크를 카테고리별로 모았습니다.
-          총 <strong>{links.length}개</strong> 링크.
+          멤버들이 실제로 써본 후기와 공유한 스킬·도구를 모았습니다.
+          총 <strong>{skills.length}개</strong>.
         </p>
       </div>
 
       <!-- category jump nav -->
       <div class="cat-tabs">
-        {sections.map((s) => (
-          <a href={`#${s.id}`} class="cat-tab">
-            <span class="ct-num">{s.num}</span>
-            <span class="ct-label">{s.title}{s.titleEm}</span>
-            <span class="ct-count">{s.items.length}</span>
-          </a>
-        ))}
+        {groups.map((g) => {
+          const meta = CATEGORY_META[g.category] ?? { num: '·', titleA: g.category, titleB: '' };
+          return (
+            <a href={`#${encodeURIComponent(g.category)}`} class="cat-tab">
+              <span class="ct-num">{meta.num}</span>
+              <span class="ct-label">{g.category}</span>
+              <span class="ct-count">{g.items.length}</span>
+            </a>
+          );
+        })}
       </div>
     </section>
 
     <!-- category sections -->
-    {sections.map((sec) => (
-      <section class="s" id={sec.id}>
-        <div class="s-head">
-          <div>
-            <div class="s-num">SECTION {sec.num}</div>
-            <h2 class="s-title">{sec.title}<em>{sec.titleEm}</em></h2>
+    {groups.map((g) => {
+      const meta = CATEGORY_META[g.category] ?? { num: '·', titleA: g.category, titleB: '', desc: '' };
+      return (
+        <section class="s" id={g.category}>
+          <div class="s-head">
+            <div>
+              <div class="s-num">SECTION {meta.num}</div>
+              <h2 class="s-title">{meta.titleA}<em>{meta.titleB}</em></h2>
+            </div>
+            <p class="s-desc">{meta.desc}</p>
           </div>
-          <p class="s-desc">{sec.desc}</p>
-        </div>
 
-        {sec.items.length === 0 ? (
-          <div class="empty-note">아직 공유된 링크가 없습니다.</div>
-        ) : (
-          <div class="article-grid">
-            {sec.items.map((link: SharedLink) => (
-              <a
-                href={link.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                class="article-card sk-card"
-              >
-                <div class="sk-host">
-                  <span class="a-chip">{hostLabel(link.url)}</span>
+          <div class="skills-grid">
+            {g.items.map((sk: CuratedSkill) => (
+              <article class="skill-card" id={sk.slug}>
+                <header class="sc-head">
+                  <div class="sc-badges">
+                    <span class={`sc-badge sc-badge-${sk.postType === '써본후기' ? 'review' : 'share'}`}>
+                      {sk.postType || '공유'}
+                    </span>
+                    {sk.difficulty && <span class="sc-badge sc-badge-diff">{sk.difficulty}</span>}
+                  </div>
+                  <h3 class="sc-title">{sk.skillName || sk.title}</h3>
+                  {sk.summary && <p class="sc-summary">{sk.summary}</p>}
+                </header>
+
+                <div class="sc-meta">
+                  {sk.authors.length > 0 && (
+                    <div class="sc-meta-row">
+                      <span class="sc-meta-key">{sk.postType === '써본후기' ? '써본 멤버' : '추천'}</span>
+                      <span class="sc-meta-val">{sk.authors.join(' · ')}</span>
+                    </div>
+                  )}
+                  {sk.audience.length > 0 && (
+                    <div class="sc-meta-row">
+                      <span class="sc-meta-key">대상</span>
+                      <span class="sc-meta-val">{sk.audience.join(' · ')}</span>
+                    </div>
+                  )}
+                  {sk.inspiredBy && (
+                    <div class="sc-meta-row">
+                      <span class="sc-meta-key">계기</span>
+                      <span class="sc-meta-val">{sk.inspiredBy}</span>
+                    </div>
+                  )}
                 </div>
-                <div class="a-title sk-title">{link.title}</div>
-                <div class="sk-meta">
-                  <span class="sk-sharers">
-                    {link.sharedBy.slice(0, 4).join(' · ')}
-                    {link.sharedBy.length > 4 && ` 외 ${link.sharedBy.length - 4}명`}
-                  </span>
-                </div>
-                <div class="a-foot">
-                  <span class="sk-weeks">
-                    {link.weeks.map((w) => `${w}주차`).join(' · ')}
-                  </span>
-                  <span class="a-read">↗</span>
-                </div>
-              </a>
+
+                <div class="sc-body" set:html={sk.bodyHtml}></div>
+
+                {sk.keywords.length > 0 && (
+                  <div class="sc-keywords">
+                    {sk.keywords.map((k) => (
+                      <span class="sc-kw">#{k}</span>
+                    ))}
+                  </div>
+                )}
+
+                {sk.links.length > 0 && (
+                  <footer class="sc-foot">
+                    {sk.links.map((url) => (
+                      <a href={url} target="_blank" rel="noopener noreferrer" class="sc-link">
+                        <span class="sc-link-host">{hostLabel(url)}</span>
+                        <span class="sc-link-arr">↗</span>
+                      </a>
+                    ))}
+                  </footer>
+                )}
+              </article>
             ))}
           </div>
-        )}
-      </section>
-    ))}
+        </section>
+      );
+    })}
 
     <footer class="mag-footer">
       <div class="fo-bot">
         <span>스폰지클럽 — 매주 만들고, 각자 나눈다</span>
-        <span>총 {links.length}개 링크</span>
+        <span>총 {skills.length}개 스킬 · 데굴데굴 큐레이션</span>
       </div>
     </footer>
   </main>
@@ -222,7 +223,7 @@ function hostLabel(url: string): string {
     font-weight: 600;
     line-height: 1.6;
     color: var(--fg);
-    max-width: 640px;
+    max-width: 720px;
   }
   .ss-lead strong {
     font-family: var(--font-display);
@@ -232,7 +233,7 @@ function hostLabel(url: string): string {
   }
   .ss-stats {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
     border: 3px solid var(--fg);
     background: var(--white);
   }
@@ -254,7 +255,7 @@ function hostLabel(url: string): string {
   }
   .ss-l {
     font-family: var(--font-label);
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
@@ -296,8 +297,6 @@ function hostLabel(url: string): string {
     font-family: var(--font-label);
     font-size: 12px;
     font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
     color: var(--fg);
   }
   .ct-count {
@@ -310,55 +309,182 @@ function hostLabel(url: string): string {
     padding: 1px 7px;
   }
 
-  /* ─── skill card overrides ───────────────────── */
-  .sk-card {
-    text-decoration: none;
-    min-height: 160px;
+  /* ─── skill cards ────────────────────────────── */
+  .skills-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 20px;
+    margin-top: 24px;
   }
-  .sk-host {
+  .skill-card {
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    gap: 16px;
+    padding: 22px;
+    background: var(--white);
+    border: 3px solid var(--fg);
+    box-shadow: var(--sh-m);
+    scroll-margin-top: 80px;
+  }
+  .sc-head {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .sc-badges {
+    display: flex;
+    flex-wrap: wrap;
     gap: 6px;
   }
-  .sk-title {
-    font-size: clamp(14px, 1.4vw, 18px);
-    line-height: 1.35;
-  }
-  .sk-meta {
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--fg);
-    line-height: 1.5;
-  }
-  .sk-sharers {
-    font-family: var(--font-label);
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--fg);
-  }
-  .sk-weeks {
+  .sc-badge {
     font-family: var(--font-label);
     font-size: 10px;
-    font-weight: 700;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    padding: 4px 9px;
+    border: 2px solid var(--fg);
+    text-transform: none;
+  }
+  .sc-badge-review { background: var(--key); color: var(--fg); }
+  .sc-badge-share  { background: var(--fg); color: var(--white); }
+  .sc-badge-diff   { background: var(--white); color: var(--fg); }
+
+  .sc-title {
+    font-family: var(--font-display);
+    font-size: clamp(20px, 2vw, 24px);
+    font-weight: 900;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    color: var(--fg);
+    margin: 0;
+    word-break: break-word;
+  }
+  .sc-summary {
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.5;
+    color: var(--fg);
+    margin: 0;
+  }
+
+  .sc-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 12px 14px;
+    background: #f7f7f4;
+    border: 2px solid var(--fg);
+  }
+  .sc-meta-row {
+    display: flex;
+    gap: 10px;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .sc-meta-key {
+    font-family: var(--font-label);
+    font-weight: 800;
     letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--fg);
+    min-width: 64px;
+    flex-shrink: 0;
+  }
+  .sc-meta-val {
+    font-family: var(--font-body);
+    font-weight: 600;
+    color: var(--fg);
   }
 
-  /* ─── responsive summary ─────────────────────── */
-  @media (max-width: 760px) {
-    .ss-stats {
-      grid-template-columns: repeat(2, 1fr);
-    }
-    .ss-stat:nth-child(2) { border-right: none; }
-    .ss-stat:nth-child(1),
-    .ss-stat:nth-child(2) { border-bottom: 3px solid var(--fg); }
+  .sc-body {
+    font-family: var(--font-body);
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--fg);
   }
-  @media (max-width: 480px) {
-    .ss-stats {
-      grid-template-columns: 1fr;
-    }
-    .ss-stat { border-right: none; border-bottom: 3px solid var(--fg); }
-    .ss-stat:last-child { border-bottom: none; }
+  .sc-body :global(h2) {
+    font-family: var(--font-label);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin: 14px 0 6px;
+    color: var(--fg);
+  }
+  .sc-body :global(h2:first-child) { margin-top: 0; }
+  .sc-body :global(ul) {
+    padding-left: 18px;
+    margin: 6px 0;
+  }
+  .sc-body :global(li) { margin: 3px 0; }
+  .sc-body :global(blockquote) {
+    margin: 8px 0;
+    padding: 8px 12px;
+    border-left: 3px solid var(--fg);
+    background: #fffbe6;
+    font-style: italic;
+    font-size: 13px;
+  }
+  .sc-body :global(blockquote p) { margin: 0; }
+  .sc-body :global(a) { color: var(--fg); text-decoration: underline; }
+
+  .sc-keywords {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .sc-kw {
+    font-family: var(--font-label);
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: var(--fg);
+    background: transparent;
+    border: 1.5px solid var(--fg);
+    padding: 2px 8px;
+  }
+
+  .sc-foot {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .sc-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 14px;
+    border: 2px solid var(--fg);
+    background: var(--fg);
+    color: var(--white);
+    text-decoration: none;
+    transition: transform 140ms ease-out, box-shadow 140ms ease-out;
+  }
+  .sc-link:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 4px 4px 0 var(--fg);
+  }
+  .sc-link-host {
+    font-family: var(--font-label);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    word-break: break-all;
+  }
+  .sc-link-arr {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: 16px;
+  }
+
+  /* ─── responsive ─────────────────────────────── */
+  @media (max-width: 760px) {
+    .ss-stats { grid-template-columns: repeat(2, 1fr); }
+    .ss-stat:nth-child(even) { border-right: none; }
+    .ss-stat:not(:nth-last-child(-n+2)) { border-bottom: 3px solid var(--fg); }
+    .skills-grid { grid-template-columns: 1fr; }
   }
 </style>
