@@ -3,9 +3,11 @@ import Layout from '../layouts/Layout.astro';
 import {
   buildAllWeeks,
   buildWeekArticles,
+  buildArticle,
   pickFeature,
   cardTitle,
   weekTheme,
+  loadTeamAnalyses,
 } from '../lib/data';
 import { loadCuratedSkills, getLatestSkills } from '../lib/curated-skills';
 
@@ -27,34 +29,38 @@ const pastIssues = [...weeks].reverse().map((w) => {
   return { week: w, theme: weekTheme(arts), count: arts.length };
 });
 
-// ── 스켈레톤 데이터 ───────────────────────────────
 // 신규 등록 스킬 TOP 3 (skill md `created` 기준 최신)
 const latestSkills = getLatestSkills(loadCuratedSkills(), 3);
 
-// 이번 주 MVP (조당 1명) — placeholder. 추후 submit.md frontmatter `mvp: true` 로 교체
+// 이번 주 MVP — submit.md frontmatter `mvp: true` 기준
 const teamOrder = ['1조', '2조', '3조', '4조', '5조', '6조'];
+const mvpSubmissions = latest
+  ? latest.submissions.filter((s) => s.mvp && s.filePath)
+  : [];
 const weeklyMvps = teamOrder.map((team) => {
-  const pool = latestArticles.filter((a) => a.member.team === team);
-  const pick = [...pool].sort((a, b) => b.bodyLength - a.bodyLength)[0];
-  if (!pick) return { team, nickname: '미정', title: '이번 주 미정', excerpt: '', url: '#' };
+  const sub = mvpSubmissions.find((s) => s.member.team === team);
+  if (!sub || !latest) return { team, nickname: '미정', title: '이번 주 미정', excerpt: '', reason: '', url: '#' };
+  const art = buildArticle(sub, latest.weekNumber);
   return {
     team,
-    nickname: pick.member.nickname,
-    title: cardTitle(pick),
-    excerpt: (pick.excerpt || '').slice(0, 80),
-    url: pick.url,
+    nickname: sub.member.nickname,
+    title: art ? cardTitle(art) : (sub.noteTitle || ''),
+    excerpt: art ? (art.excerpt || '').slice(0, 90) : '',
+    reason: sub.mvpReason || '',
+    url: art?.url || '#',
   };
 });
 
-// 6조 카드 — placeholder. 추후 90_analysis/teams/Week_0N_조N.md 에서 로드
+// 조별 분석 카드 — 90_analysis/teams/Week_0N_조M.md 에서 로드
+const teamAnalyses = latest ? loadTeamAnalyses(latest.weekNumber) : [];
 const teamCards = teamOrder.map((team) => {
-  const arts = latestArticles.filter((a) => a.member.team === team);
-  const theme = arts[0]?.missions[0]?.title || `${latest?.weekNumber ?? ''}주차의 기록`;
+  const a = teamAnalyses.find((x) => x.team === team);
+  if (a) return { team, theme: a.theme, summary: a.summary, insight: a.insight };
   return {
     team,
-    theme,
-    summary: `${arts.length}명이 제출했다. 조별 요약은 추후 채워진다.`,
-    insight: '클로드가 분석한 인사이트가 이 자리에 들어갑니다.',
+    theme: `${latest?.weekNumber ?? ''}주차의 기록`,
+    summary: '아직 분석이 생성되지 않았습니다.',
+    insight: '',
   };
 });
 
@@ -150,7 +156,7 @@ const year = new Date().getFullYear();
                 <div class="mvp-team">{m.team}</div>
                 <div class="mvp-name">{m.nickname}</div>
                 <div class="mvp-title">{m.title}</div>
-                {m.excerpt && <div class="mvp-excerpt">"{m.excerpt}…"</div>}
+                {m.reason && <div class="mvp-reason">★ {m.reason}</div>}
               </a>
             ))}
           </div>
@@ -333,6 +339,7 @@ const year = new Date().getFullYear();
 .mvp-name { font-size: 22px; font-weight: 900; line-height: 1.2; }
 .mvp-title { font-size: 14px; font-weight: 700; line-height: 1.4; color: var(--fg); }
 .mvp-excerpt { font-size: 13px; line-height: 1.55; color: #555; }
+.mvp-reason { font-size: 12px; line-height: 1.55; color: #555; border-left: 3px solid var(--key); padding-left: 8px; margin-top: 4px; }
 
 @media (max-width: 900px) {
   .mvp-grid { grid-template-columns: repeat(2, 1fr); }

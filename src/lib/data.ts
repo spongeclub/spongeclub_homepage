@@ -34,6 +34,8 @@ export type Submission = {
   filePath?: string;
   noteTitle?: string;
   summary?: string;
+  mvp?: boolean;
+  mvpReason?: string;
 };
 
 export type WeekData = {
@@ -244,6 +246,8 @@ function buildWeekFromFolder(folderName: string, members: Member[]): WeekData {
       submittedFlag,
       filePath,
       noteTitle: extractFirstHeading(text) ?? path.basename(filePath, '.md'),
+      mvp: fm.mvp === 'true',
+      mvpReason: fm.mvp_reason,
     };
   });
 
@@ -286,6 +290,45 @@ export function groupByTeam(submissions: Submission[]): Map<string, Submission[]
 export function vaultGithubUrl(filePath: string): string {
   const rel = path.relative(VAULT_PATH, filePath);
   return `https://github.com/spongeclub/spongeclub_1/blob/main/${rel}`;
+}
+
+// ─── 조별 분석 (90_analysis/teams/Week_0N_조M.md) ─────────────────────
+export type TeamAnalysis = {
+  team: string;
+  weekNumber: number;
+  theme: string;
+  mvp: string;
+  summary: string;
+  insight: string;
+};
+
+function extractH2Section(body: string, heading: string): string {
+  const re = new RegExp(`##\\s+${heading.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\$&')}\\s*\\n([\\s\\S]*?)(?=\\n##\\s|$)`);
+  const m = body.match(re);
+  return m ? m[1].trim() : '';
+}
+
+export function loadTeamAnalyses(weekNumber: number): TeamAnalysis[] {
+  const teamsDir = path.join(VAULT_PATH, '90_analysis/teams');
+  if (!fs.existsSync(teamsDir)) return [];
+  const out: TeamAnalysis[] = [];
+  const ww = String(weekNumber).padStart(2, '0');
+  for (const team of ['1조', '2조', '3조', '4조', '5조', '6조']) {
+    const fp = path.join(teamsDir, `Week_${ww}_${team}.md`);
+    if (!fs.existsSync(fp)) continue;
+    const text = fs.readFileSync(fp, 'utf-8');
+    const fm = parseFrontmatter(text);
+    const body = stripFrontmatter(text);
+    out.push({
+      team,
+      weekNumber,
+      theme: fm.theme || '',
+      mvp: fm.mvp || '',
+      summary: extractH2Section(body, '요약'),
+      insight: extractH2Section(body, '★ 클로드 인사이트') || extractH2Section(body, '클로드 인사이트'),
+    });
+  }
+  return out;
 }
 
 // 닉네임은 영문/한글 혼재 — URL safe slug 생성을 위해 encodeURIComponent로 wrap
