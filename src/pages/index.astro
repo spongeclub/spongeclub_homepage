@@ -7,6 +7,7 @@ import {
   cardTitle,
   weekTheme,
 } from '../lib/data';
+import { loadCuratedSkills, getLatestSkills } from '../lib/curated-skills';
 
 // 발행된 호 = 제출 기록이 1건 이상 있는 주차만
 const weeks = buildAllWeeks().filter((w) => w.submittedCount > 0);
@@ -24,6 +25,37 @@ const sideArticles = latestArticles.filter((a) => a !== feature).slice(0, 4);
 const pastIssues = [...weeks].reverse().map((w) => {
   const arts = buildWeekArticles(w);
   return { week: w, theme: weekTheme(arts), count: arts.length };
+});
+
+// ── 스켈레톤 데이터 ───────────────────────────────
+// 신규 등록 스킬 TOP 3 (skill md `created` 기준 최신)
+const latestSkills = getLatestSkills(loadCuratedSkills(), 3);
+
+// 이번 주 MVP (조당 1명) — placeholder. 추후 submit.md frontmatter `mvp: true` 로 교체
+const teamOrder = ['1조', '2조', '3조', '4조', '5조', '6조'];
+const weeklyMvps = teamOrder.map((team) => {
+  const pool = latestArticles.filter((a) => a.member.team === team);
+  const pick = [...pool].sort((a, b) => b.bodyLength - a.bodyLength)[0];
+  if (!pick) return { team, nickname: '미정', title: '이번 주 미정', excerpt: '', url: '#' };
+  return {
+    team,
+    nickname: pick.member.nickname,
+    title: cardTitle(pick),
+    excerpt: (pick.excerpt || '').slice(0, 80),
+    url: pick.url,
+  };
+});
+
+// 6조 카드 — placeholder. 추후 90_analysis/teams/Week_0N_조N.md 에서 로드
+const teamCards = teamOrder.map((team) => {
+  const arts = latestArticles.filter((a) => a.member.team === team);
+  const theme = arts[0]?.missions[0]?.title || `${latest?.weekNumber ?? ''}주차의 기록`;
+  return {
+    team,
+    theme,
+    summary: `${arts.length}명이 제출했다. 조별 요약은 추후 채워진다.`,
+    insight: '클로드가 분석한 인사이트가 이 자리에 들어갑니다.',
+  };
 });
 
 const vol = (n: number) => `VOL.${String(n).padStart(2, '0')}`;
@@ -64,43 +96,66 @@ const year = new Date().getFullYear();
 
     {hasData && (
       <>
-        <!-- ═══ HERO / 소개 ═══ -->
-        <section class="hero" id="about">
+        <!-- ═══ HERO / 이번 주 MVP ═══ -->
+        <section class="hero hero-mvp" id="about">
           <div class="hero-deco" aria-hidden="true">
             <span class="d-c"></span>
             <span class="d-s"></span>
           </div>
           <div class="hero-kicker reveal d1">
-            <span>스폰지클럽 — <b>매주 만들고, 각자 나눈다</b></span>
+            <span>스폰지클럽 — <b>이번 주의 MVP</b></span>
             <span>{latest && vol(latest.weekNumber)} · {year}</span>
           </div>
           <h1 class="hero-title reveal d2">
-            매주 만들고,<br />
-            <em>각자</em> 나눈다.
+            이번 주 <em>MVP</em>
           </h1>
           <p class="hero-lede reveal d3">
-            {totalMembers}명이 매주 무언가를 만들고, 그 과정을 기록하는 AI 빌더 커뮤니티.<br />
-            이 페이지는 매주 한 호씩 발행되는 그 기록입니다.
+            6개 조에서 한 명씩 — 이번 호의 6인을 골랐습니다.
           </p>
-          <div class="hero-stats reveal d4">
-            <div>
-              <div class="n">{String(totalWeeks).padStart(2, '0')}</div>
-              <div class="l">발행 호 / Issues</div>
-            </div>
-            <div>
-              <div class="n">{totalMembers}</div>
-              <div class="l">멤버 / Members</div>
-            </div>
-            <div>
-              <div class="n">{totalSubmissions}</div>
-              <div class="l">누적 기록 / Records</div>
-            </div>
-            <div>
-              <div class="n">06</div>
-              <div class="l">조 / Teams</div>
-            </div>
+          <div class="mvp-grid reveal d4">
+            {weeklyMvps.map((m) => (
+              <a class="mvp-card" href={m.url}>
+                <div class="mvp-team">{m.team}</div>
+                <div class="mvp-name">{m.nickname}</div>
+                <div class="mvp-title">{m.title}</div>
+                {m.excerpt && <div class="mvp-excerpt">"{m.excerpt}…"</div>}
+              </a>
+            ))}
           </div>
         </section>
+
+        <!-- ═══ 신규 등록 스킬 TOP 3 ═══ -->
+        {latestSkills.length > 0 && (
+          <section class="s" id="new-skills">
+            <div class="s-head">
+              <div>
+                <div class="s-num">NEW DROP</div>
+                <h2 class="s-title">방금 등록된 <em>스킬</em></h2>
+              </div>
+              <p class="s-desc">
+                이번 주 새로 들어온 스킬 후기 — 따끈할 때 보세요.
+              </p>
+            </div>
+            <div class="skills-top3">
+              {latestSkills.map((sk) => (
+                <a class="skill-card" href={`/skills/#${sk.slug}`}>
+                  <div class="skill-meta">
+                    <span class="sk-cat">{sk.category}</span>
+                    {sk.created && <span class="sk-date">{sk.created}</span>}
+                  </div>
+                  <div class="skill-name">{sk.skillName || sk.title}</div>
+                  <div class="skill-summary">{sk.summary}</div>
+                  <div class="skill-foot">
+                    {sk.userCount > 0 && <span>🔥 {sk.userCount}명이 써봄</span>}
+                  </div>
+                </a>
+              ))}
+            </div>
+            <div class="skills-more">
+              <a class="more-cta" href="/skills/">스킬모음 전체 보기 →</a>
+            </div>
+          </section>
+        )}
 
         <!-- ═══ 운영 방식 3스텝 ═══ -->
         <section class="s">
@@ -155,43 +210,31 @@ const year = new Date().getFullYear();
               </p>
             </div>
 
-            {feature ? (
-              <div class="cover">
-                <div class="cover-main">
-                  <span class="cover-tag">★ 이번 호 주요 기사</span>
-                  <h3 class="cover-headline">{cardTitle(feature)}</h3>
-                  <p class="cover-excerpt">{feature.excerpt}</p>
-                  <div class="cover-by">
-                    글 ·{' '}
-                    <a
-                      href={`/member/${encodeURIComponent(feature.member.team)}/${encodeURIComponent(feature.member.nickname)}/`}
-                    >
-                      <b>{feature.member.nickname}</b>
-                    </a>{' '}
-                    · {feature.member.team}
+            <div class="team-grid">
+              {teamCards.map((t) => (
+                <article class="team-card">
+                  <div class="tc-head">
+                    <span class="tc-team">{t.team}</span>
+                    <span class="tc-theme">{t.theme}</span>
                   </div>
-                  <a class="cover-cta" href={`/issue/${latest.weekNumber}/`}>
-                    이번 호 전체 보기 →
-                  </a>
-                </div>
-                <div class="cover-side">
-                  {sideArticles.map((a) => (
-                    <a class="cover-side-row" href={a.url}>
-                      <span class="r-team">{a.member.team}</span>
-                      <span class="r-title">{cardTitle(a)}</span>
-                      <span class="r-by">{a.member.nickname}</span>
-                    </a>
-                  ))}
-                  {sideArticles.length === 0 && (
-                    <div class="cover-side-row">
-                      <span class="r-by">다른 기록이 곧 채워집니다.</span>
+                  <div class="tc-body">
+                    <div class="tc-section">
+                      <div class="tc-label">요약</div>
+                      <p class="tc-text">{t.summary}</p>
                     </div>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <div class="empty-note">이번 호에 아직 제출된 기록이 없습니다.</div>
-            )}
+                    <div class="tc-section tc-insight">
+                      <div class="tc-label">★ 클로드 인사이트</div>
+                      <p class="tc-text">{t.insight}</p>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+            <div class="issue-cta-row">
+              <a class="more-cta" href={`/issue/${latest.weekNumber}/`}>
+                이번 호 전체 기록 보기 →
+              </a>
+            </div>
           </section>
         )}
 
@@ -257,3 +300,153 @@ const year = new Date().getFullYear();
     </div>
   </footer>
 </Layout>
+
+<style is:global>
+/* ─── HERO: 이번 주 MVP ─────────────────────────── */
+.hero-mvp .hero-title { margin-bottom: 12px; }
+.hero-mvp .hero-lede { margin-bottom: 36px; }
+
+.mvp-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  border: 4px solid var(--fg);
+  background: var(--white);
+}
+.mvp-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 24px 22px;
+  border-right: 4px solid var(--fg);
+  border-bottom: 4px solid var(--fg);
+  text-decoration: none;
+  color: var(--fg);
+  background: var(--white);
+  transition: background 0.15s;
+}
+.mvp-card:nth-child(3n) { border-right: none; }
+.mvp-card:nth-last-child(-n+3) { border-bottom: none; }
+.mvp-card:hover { background: var(--key); }
+.mvp-team {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  padding: 4px 8px;
+  background: var(--fg);
+  color: var(--white);
+  align-self: flex-start;
+}
+.mvp-name { font-size: 22px; font-weight: 900; line-height: 1.2; }
+.mvp-title { font-size: 14px; font-weight: 700; line-height: 1.4; color: var(--fg); }
+.mvp-excerpt { font-size: 13px; line-height: 1.55; color: #555; }
+
+@media (max-width: 900px) {
+  .mvp-grid { grid-template-columns: repeat(2, 1fr); }
+  .mvp-card:nth-child(3n) { border-right: 4px solid var(--fg); }
+  .mvp-card:nth-child(2n) { border-right: none; }
+  .mvp-card:nth-last-child(-n+3) { border-bottom: 4px solid var(--fg); }
+  .mvp-card:nth-last-child(-n+2) { border-bottom: none; }
+}
+@media (max-width: 560px) {
+  .mvp-grid { grid-template-columns: 1fr; }
+  .mvp-card { border-right: none !important; border-bottom: 4px solid var(--fg) !important; }
+  .mvp-card:last-child { border-bottom: none !important; }
+}
+
+/* ─── 신규 스킬 TOP 3 ────────────────────────────── */
+.skills-top3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  border: 4px solid var(--fg);
+  background: var(--white);
+}
+.skill-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 22px;
+  border-right: 4px solid var(--fg);
+  text-decoration: none;
+  color: var(--fg);
+  background: var(--white);
+  transition: background 0.15s;
+}
+.skill-card:last-child { border-right: none; }
+.skill-card:hover { background: var(--key); }
+.skill-meta { display: flex; justify-content: space-between; align-items: center; font-size: 11px; }
+.sk-cat { font-weight: 900; letter-spacing: 0.08em; }
+.sk-date { color: #777; font-variant-numeric: tabular-nums; }
+.skill-name { font-size: 22px; font-weight: 900; line-height: 1.2; }
+.skill-summary { font-size: 14px; line-height: 1.5; color: #333; }
+.skill-foot { font-size: 12px; color: #555; margin-top: auto; padding-top: 8px; }
+
+@media (max-width: 900px) {
+  .skills-top3 { grid-template-columns: 1fr; }
+  .skill-card { border-right: none; border-bottom: 4px solid var(--fg); }
+  .skill-card:last-child { border-bottom: none; }
+}
+
+.skills-more, .issue-cta-row {
+  margin-top: 18px;
+  text-align: right;
+}
+.more-cta {
+  display: inline-block;
+  font-weight: 900;
+  text-decoration: none;
+  color: var(--fg);
+  border-bottom: 3px solid var(--fg);
+  padding-bottom: 2px;
+}
+.more-cta:hover { color: var(--red); border-color: var(--red); }
+
+/* ─── 6조 카드 그리드 ────────────────────────────── */
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  border: 4px solid var(--fg);
+  background: var(--white);
+}
+.team-card {
+  display: flex;
+  flex-direction: column;
+  border-right: 4px solid var(--fg);
+  border-bottom: 4px solid var(--fg);
+  background: var(--white);
+}
+.team-card:nth-child(3n) { border-right: none; }
+.team-card:nth-last-child(-n+3) { border-bottom: none; }
+.tc-head {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px 20px;
+  background: var(--fg);
+  color: var(--white);
+}
+.tc-team { font-size: 12px; font-weight: 900; letter-spacing: 0.1em; opacity: 0.7; }
+.tc-theme { font-size: 17px; font-weight: 900; line-height: 1.3; }
+.tc-body { padding: 18px 20px; display: flex; flex-direction: column; gap: 14px; }
+.tc-section { display: flex; flex-direction: column; gap: 4px; }
+.tc-label { font-size: 11px; font-weight: 900; letter-spacing: 0.08em; color: #777; }
+.tc-text { font-size: 13px; line-height: 1.55; color: var(--fg); margin: 0; }
+.tc-insight .tc-label { color: var(--red); }
+.tc-insight .tc-text { background: var(--key); padding: 8px 10px; }
+
+@media (max-width: 900px) {
+  .team-grid { grid-template-columns: repeat(2, 1fr); }
+  .team-card:nth-child(3n) { border-right: 4px solid var(--fg); }
+  .team-card:nth-child(2n) { border-right: none; }
+  .team-card:nth-last-child(-n+3) { border-bottom: 4px solid var(--fg); }
+  .team-card:nth-last-child(-n+2) { border-bottom: none; }
+}
+@media (max-width: 560px) {
+  .team-grid { grid-template-columns: 1fr; }
+  .team-card { border-right: none !important; border-bottom: 4px solid var(--fg) !important; }
+  .team-card:last-child { border-bottom: none !important; }
+}
+</style>
