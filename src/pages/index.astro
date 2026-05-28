@@ -51,16 +51,21 @@ const weeklyMvps = teamOrder.map((team) => {
   };
 });
 
-// 조별 주차 달성률 — SpongeVillage hero 용
+// 조별 시즌 최고 달성률(peak) — SpongeVillage hero 용
+// 현재 주는 아직 진행 중이라 0%가 많으니, 시즌 전체에서 가장 높았던 주차 달성률을 보여줌
 const villageTeams = teamOrder.map((team) => {
   if (!latest) return { name: team };
-  const subs = latest.submissions.filter((s) => s.member.team === team);
-  const submitted = subs.filter((s) => s.status === 'submitted').length;
-  const total = subs.length;
-  const rate = total > 0 ? Math.round((submitted / total) * 100) : 0;
+  let peakRate = 0;
+  for (const w of weeks) {
+    const subs = w.submissions.filter((s) => s.member.team === team);
+    const submitted = subs.filter((s) => s.status === 'submitted').length;
+    const total = subs.length;
+    const rate = total > 0 ? Math.round((submitted / total) * 100) : 0;
+    if (rate > peakRate) peakRate = rate;
+  }
   return {
     name: team,
-    weeklyAchievementRate: rate,
+    weeklyAchievementRate: peakRate,
     href: `/issue/${latest.weekNumber}/`,
   };
 });
@@ -406,19 +411,30 @@ const year = new Date().getFullYear();
 
   /* ─── HERO (잡지 표지) ─── */
   .hp-hero {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: clamp(40px, 6vw, 72px) 24px clamp(24px, 4vw, 48px);
     display: flex; flex-direction: column;
     gap: clamp(28px, 4vw, 48px);
+    padding-top: clamp(40px, 6vw, 72px);
+    padding-bottom: clamp(24px, 4vw, 48px);
   }
   .hp-hero-text {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
     display: flex; flex-direction: column;
     gap: 16px;
     align-items: flex-start;
   }
+  /* 비키니바텀 마을 — 화면 풀-블리드로 배경처럼 */
   .hp-hero-village {
     width: 100%;
+  }
+  .hp-hero-village .bb-scene {
+    border-radius: 0;
+    aspect-ratio: 2172 / 600;
+    min-height: 320px;
+  }
+  @media (min-width: 1400px) {
+    .hp-hero-village .bb-scene { aspect-ratio: 2172 / 560; }
   }
   .hp-hero-kicker {
     font-family: var(--sc-font-body);
