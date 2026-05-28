@@ -6,41 +6,13 @@ import {
   getTeamTopic,
   noteUrl,
   type Submission,
-  type WeekData,
 } from '../lib/data';
 
 const weeks = buildAllWeeks();
 const teams = ['1조', '2조', '3조', '4조', '5조', '6조'];
 
-const teamColor = (team: string) =>
-  ({
-    '1조': 'bg-team-1',
-    '2조': 'bg-team-2',
-    '3조': 'bg-team-3',
-    '4조': 'bg-team-4',
-    '5조': 'bg-team-5',
-    '6조': 'bg-team-6',
-  })[team] ?? 'bg-neutral-400';
-
-const teamTextColor = (team: string) =>
-  ({
-    '1조': 'text-team-1',
-    '2조': 'text-team-2',
-    '3조': 'text-team-3',
-    '4조': 'text-team-4',
-    '5조': 'text-team-5',
-    '6조': 'text-team-6',
-  })[team] ?? 'text-neutral-700';
-
 const submissionUrl = (s: Submission, weekNumber: number) =>
   s.filePath ? noteUrl(s, weekNumber) : '#';
-
-const statusDot = (s: Submission) =>
-  s.status === 'submitted'
-    ? 'bg-emerald-500'
-    : s.status === 'drafting'
-      ? 'bg-amber-500'
-      : 'bg-neutral-300';
 
 const statusText = (s: Submission) =>
   s.status === 'submitted' ? '제출' : s.status === 'drafting' ? '작성 중' : '미작성';
@@ -48,92 +20,79 @@ const statusText = (s: Submission) =>
 const latestIdx = weeks.length - 1;
 ---
 
-<Layout title="스폰지클럽 — 과제 현황판">
+<Layout title="현황판 — 스폰지클럽" bodyClass="sc-page">
+  <header class="sc-header">
+    <div class="sc-header-inner">
+      <a href="/" class="sc-brand">
+        <span class="sc-brand-mark">🧽</span>
+        <span class="sc-brand-name">spongeclub</span>
+        <span class="sc-brand-sep">/</span>
+        <span class="sc-brand-sub">현황판</span>
+      </a>
+      <nav class="sc-nav" aria-label="메인 메뉴">
+        <a href="/">매거진</a>
+        <a href="/board/" class="active">현황판</a>
+        <a href="/keywords/">키워드</a>
+        <a href="/skills/">스킬</a>
+        <a href="/gallery/">갤러리</a>
+      </nav>
+    </div>
+  </header>
+
   {weeks.length === 0 && (
-    <main class="max-w-5xl mx-auto p-12 text-center">
-      <h1 class="text-3xl font-semibold mb-4">스폰지클럽</h1>
-      <p class="text-neutral-500">아직 미션 데이터가 없습니다.</p>
+    <main class="sc-main">
+      <div class="bd-empty">아직 미션 데이터가 없습니다.</div>
     </main>
   )}
 
   {weeks.length > 0 && (
-    <main class="max-w-7xl mx-auto p-6 sm:p-10">
-      <header class="mb-6">
-        <p class="text-sm text-neutral-500 mb-1">스폰지클럽</p>
-        <h1 class="text-3xl sm:text-4xl font-semibold tracking-tight text-neutral-900">
-          과제 현황판
+    <main class="sc-main">
+      <section class="sc-title-section">
+        <p class="sc-kicker">매주 누가 제출했나</p>
+        <h1 class="sc-h1">
+          <span class="sc-shape sc-shape--square" aria-hidden="true"></span>
+          현황판
         </h1>
-      </header>
+        <p class="sc-lede">
+          주차별로 6개 조 <span class="sc-highlight">72명의 제출 상태</span>를 한눈에.
+        </p>
+      </section>
 
-      {/* 주차 탭 */}
-      <nav
-        id="week-tabs"
-        class="flex flex-wrap gap-1 mb-4 border-b border-neutral-200 pb-3"
-      >
+      <!-- 주차 탭 -->
+      <nav id="week-tabs" class="bd-tabs" aria-label="주차">
         {weeks.map((w, i) => (
           <button
             data-week-idx={i}
             data-active={i === latestIdx ? 'true' : 'false'}
-            class="week-tab px-3 py-1.5 rounded-md text-sm font-medium border border-transparent
-              data-[active=true]:bg-neutral-900 data-[active=true]:text-white data-[active=true]:border-neutral-900
-              data-[active=false]:text-neutral-500 data-[active=false]:hover:text-neutral-900 data-[active=false]:hover:bg-neutral-100
-              transition"
+            class="bd-tab"
           >
             <span>{w.weekNumber}주차</span>
-            {w.dateLabel && (
-              <span class="ml-1.5 text-xs opacity-70">{w.dateLabel}</span>
-            )}
+            {w.dateLabel && <span class="bd-tab-date">{w.dateLabel}</span>}
           </button>
         ))}
       </nav>
 
-      {/* 통계 + 뷰 토글 */}
-      <div class="flex items-center justify-between flex-wrap gap-3 mb-6">
-        <div class="flex items-center gap-3 text-sm">
-          <span id="week-summary" class="text-neutral-600"></span>
-          <span class="flex items-center gap-3 text-xs text-neutral-500">
-            <span class="flex items-center gap-1">
-              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>제출
-            </span>
-            <span class="flex items-center gap-1">
-              <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>작성 중
-            </span>
-            <span class="flex items-center gap-1">
-              <span class="w-1.5 h-1.5 rounded-full bg-neutral-300"></span>미작성
-            </span>
+      <!-- 통계 + 뷰 토글 -->
+      <div class="bd-toolbar">
+        <div class="bd-summary">
+          <span id="week-summary" class="bd-summary-text"></span>
+          <span class="bd-legend">
+            <span class="bd-legend-item"><span class="bd-dot bd-dot--done"></span>제출</span>
+            <span class="bd-legend-item"><span class="bd-dot bd-dot--draft"></span>작성 중</span>
+            <span class="bd-legend-item"><span class="bd-dot bd-dot--empty"></span>미작성</span>
           </span>
         </div>
-        <div
-          id="view-toggle"
-          class="inline-flex rounded-md border border-neutral-200 bg-white p-0.5 text-sm"
-        >
-          <button
-            data-view="team"
-            class="view-btn px-3 py-1 rounded data-[active=true]:bg-neutral-900 data-[active=true]:text-white text-neutral-600"
-            data-active="true"
-          >
-            조별
-          </button>
-          <button
-            data-view="all"
-            class="view-btn px-3 py-1 rounded data-[active=true]:bg-neutral-900 data-[active=true]:text-white text-neutral-600"
-            data-active="false"
-          >
-            전체
-          </button>
+        <div id="view-toggle" class="bd-view-toggle">
+          <button data-view="team" class="bd-view-btn" data-active="true">조별</button>
+          <button data-view="all" class="bd-view-btn" data-active="false">전체</button>
         </div>
       </div>
 
-      {/* 주차별 패널 */}
       {weeks.map((week, i) => {
         const grouped = groupByTeam(week.submissions);
         return (
-          <section
-            data-week-panel={i}
-            class={i === latestIdx ? 'block' : 'hidden'}
-          >
-            {/* 조별 진행률 미니 바 */}
-            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 mb-6">
+          <section data-week-panel={i} class={i === latestIdx ? 'bd-panel' : 'bd-panel bd-hidden'}>
+            <div class="bd-progress-grid">
               {teams.map((team) => {
                 const subs = grouped.get(team) ?? [];
                 const done = subs.filter((s: Submission) => s.status === 'submitted').length;
@@ -141,120 +100,82 @@ const latestIdx = weeks.length - 1;
                 const total = subs.length;
                 const pct = total === 0 ? 0 : Math.round((done / total) * 100);
                 return (
-                  <div class="bg-white rounded-md p-3 border border-neutral-200">
-                    <div class="flex justify-between items-baseline mb-2">
-                      <span class={`text-sm font-medium ${teamTextColor(team)}`}>{team}</span>
-                      <span class="text-xs text-neutral-600">
+                  <div class="bd-progress">
+                    <div class="bd-progress-head">
+                      <span class="bd-progress-team">{team}</span>
+                      <span class="bd-progress-pct">
                         {pct}%
-                        {drafting > 0 && (
-                          <span class="text-amber-600 ml-1">+{drafting}</span>
-                        )}
+                        {drafting > 0 && <span class="bd-progress-draft">+{drafting}</span>}
                       </span>
                     </div>
-                    <div class="h-1.5 bg-neutral-100 rounded-full overflow-hidden">
-                      <div class={`h-full ${teamColor(team)}`} style={`width: ${pct}%`}></div>
+                    <div class="bd-progress-bar">
+                      <div class="bd-progress-fill" style={`width: ${pct}%`}></div>
                     </div>
                   </div>
                 );
               })}
             </div>
 
-            {/* 조별 뷰 */}
-            <div data-view-panel="team" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <!-- 조별 -->
+            <div data-view-panel="team" class="bd-team-grid">
               {teams.map((team) => {
                 const subs = grouped.get(team) ?? [];
                 const done = subs.filter((s: Submission) => s.status === 'submitted').length;
                 const total = subs.length;
                 const topic = getTeamTopic(team);
                 return (
-                  <div class="bg-white border border-neutral-200 rounded-lg overflow-hidden">
-                    <header class="flex items-center justify-between px-3 py-2.5 border-b border-neutral-200">
-                      <div class="flex items-center gap-2 min-w-0">
-                        <span class={`w-2 h-6 rounded-sm ${teamColor(team)} flex-shrink-0`}></span>
-                        <div class="min-w-0">
-                          <span class={`font-semibold ${teamTextColor(team)}`}>{team}</span>
-                          {topic && (
-                            <span class="ml-2 text-xs text-neutral-500 truncate">
-                              {topic.topic}
-                            </span>
-                          )}
-                        </div>
+                  <article class="bd-team-card">
+                    <header class="bd-team-card-head">
+                      <div class="bd-team-card-info">
+                        <span class="bd-team-card-team">{team}</span>
+                        {topic && <span class="bd-team-card-topic">{topic.topic}</span>}
                       </div>
-                      <span class="text-sm flex-shrink-0 font-semibold text-neutral-900">
-                        {total === 0 ? 0 : Math.round((done / total) * 100)}%
-                      </span>
+                      <span class="bd-team-card-pct">{total === 0 ? 0 : Math.round((done / total) * 100)}%</span>
                     </header>
-                    <ul class="divide-y divide-neutral-100">
+                    <ul class="bd-team-card-list">
                       {subs.map((s: Submission) => (
                         <li>
                           <a
                             href={submissionUrl(s, week.weekNumber)}
-                            class={`flex items-center gap-2 px-3 py-1.5 transition ${
-                              s.status === 'submitted'
-                                ? 'hover:bg-neutral-50 text-neutral-900'
-                                : s.status === 'drafting'
-                                  ? 'hover:bg-neutral-50 text-neutral-700'
-                                  : 'opacity-50 hover:opacity-80'
-                            }`}
+                            class={`bd-row bd-row--${s.status}`}
                           >
-                            <span class={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${statusDot(s)}`}></span>
-                            <span class="text-sm font-medium">{s.member.nickname}</span>
-                            {s.member.isCrew && (
-                              <span class="text-[10px] text-neutral-500 bg-neutral-100 rounded px-1.5">
-                                크루
-                              </span>
-                            )}
-                            <span class="text-xs text-neutral-500 truncate ml-auto">
-                              {statusText(s)}
-                            </span>
+                            <span class={`bd-dot bd-dot--${s.status === 'submitted' ? 'done' : s.status === 'drafting' ? 'draft' : 'empty'}`}></span>
+                            <span class="bd-row-name">{s.member.nickname}</span>
+                            {s.member.isCrew && <span class="bd-row-crew">크루</span>}
+                            <span class="bd-row-status">{statusText(s)}</span>
                           </a>
                         </li>
                       ))}
                     </ul>
-                  </div>
+                  </article>
                 );
               })}
             </div>
 
-            {/* 전체 뷰 */}
-            <div data-view-panel="all" class="hidden grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-12 gap-2">
-              {week.submissions.map((s) => {
-                const cardClass =
-                  s.status === 'submitted'
-                    ? 'border-neutral-300 bg-white hover:border-neutral-500'
-                    : s.status === 'drafting'
-                      ? 'border-neutral-200 bg-white hover:border-neutral-400'
-                      : 'border-neutral-100 bg-neutral-50 hover:border-neutral-200';
-                const textClass =
-                  s.status === 'submitted'
-                    ? 'text-neutral-900'
-                    : s.status === 'drafting'
-                      ? 'text-neutral-700'
-                      : 'text-neutral-400';
-                return (
-                  <a
-                    href={submissionUrl(s, week.weekNumber)}
-                    class={`group relative flex flex-col items-center justify-center aspect-square rounded-md border ${cardClass} transition`}
-                    title={s.noteTitle ?? s.member.nickname}
-                  >
-                    <span class={`absolute top-1 left-1 w-1 h-3 rounded-full ${teamColor(s.member.team)}`}></span>
-                    <span class={`absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full ${statusDot(s)}`}></span>
-                    <span class={`text-xs ${textClass} truncate max-w-full px-1`}>
-                      {s.member.nickname}
-                    </span>
-                  </a>
-                );
-              })}
+            <!-- 전체 -->
+            <div data-view-panel="all" class="bd-all-grid bd-hidden">
+              {week.submissions.map((s) => (
+                <a
+                  href={submissionUrl(s, week.weekNumber)}
+                  class={`bd-tile bd-tile--${s.status}`}
+                  title={s.noteTitle ?? s.member.nickname}
+                >
+                  <span class={`bd-dot bd-dot--${s.status === 'submitted' ? 'done' : s.status === 'drafting' ? 'draft' : 'empty'} bd-tile-dot`}></span>
+                  <span class="bd-tile-name">{s.member.nickname}</span>
+                </a>
+              ))}
             </div>
           </section>
         );
       })}
 
-      <footer class="mt-12 text-center text-xs text-neutral-400">
-        <span id="week-folder"></span>
-      </footer>
+      <div class="bd-folder-foot" id="week-folder"></div>
     </main>
   )}
+
+  <footer class="sc-footer">
+    스폰지클럽 — 매주 만들고, 각자 나눈다
+  </footer>
 
   <script
     is:inline
@@ -267,7 +188,7 @@ const latestIdx = weeks.length - 1;
       })),
     }}
   >
-    const tabs = document.querySelectorAll('.week-tab');
+    const tabs = document.querySelectorAll('.bd-tab');
     const panels = document.querySelectorAll('[data-week-panel]');
     const summaryEl = document.getElementById('week-summary');
     const folderEl = document.getElementById('week-folder');
@@ -276,23 +197,18 @@ const latestIdx = weeks.length - 1;
       const s = summaryPerWeek[idx];
       if (!s || !summaryEl) return;
       summaryEl.innerHTML =
-        `<span class="text-neutral-900 font-semibold">${s.submitted}</span>` +
-        ` / ${s.total} 제출` +
-        (s.drafting > 0 ? ` · <span class="text-amber-600">${s.drafting} 작성 중</span>` : '');
+        `<b>${s.submitted}</b> / ${s.total} 제출` +
+        (s.drafting > 0 ? ` · <b class="bd-draft-num">${s.drafting} 작성 중</b>` : '');
       if (folderEl) folderEl.textContent = s.folder;
     }
 
     function selectWeek(idx) {
       tabs.forEach((t) => {
-        t.setAttribute(
-          'data-active',
-          String(Number(t.getAttribute('data-week-idx')) === idx)
-        );
+        t.setAttribute('data-active', String(Number(t.getAttribute('data-week-idx')) === idx));
       });
       panels.forEach((p) => {
         const isActive = Number(p.getAttribute('data-week-panel')) === idx;
-        p.classList.toggle('hidden', !isActive);
-        p.classList.toggle('block', isActive);
+        p.classList.toggle('bd-hidden', !isActive);
       });
       renderSummary(idx);
     }
@@ -303,7 +219,7 @@ const latestIdx = weeks.length - 1;
       });
     });
 
-    const viewBtns = document.querySelectorAll('.view-btn');
+    const viewBtns = document.querySelectorAll('.bd-view-btn');
     viewBtns.forEach((btn) => {
       btn.addEventListener('click', () => {
         const target = btn.getAttribute('data-view');
@@ -311,20 +227,175 @@ const latestIdx = weeks.length - 1;
           b.setAttribute('data-active', String(b.getAttribute('data-view') === target))
         );
         document.querySelectorAll('[data-view-panel]').forEach((panel) => {
-          const panelType = panel.getAttribute('data-view-panel');
-          const isActive = panelType === target;
-          panel.classList.toggle('hidden', !isActive);
-          // all 패널만 grid 클래스 토글 (team 패널은 마크업에 grid 항상 유지)
-          if (panelType === 'all') {
-            panel.classList.toggle('grid', isActive);
-          }
+          const isActive = panel.getAttribute('data-view-panel') === target;
+          panel.classList.toggle('bd-hidden', !isActive);
         });
       });
     });
 
     const initialActive = Array.from(tabs).find((t) => t.getAttribute('data-active') === 'true');
-    if (initialActive) {
-      renderSummary(Number(initialActive.getAttribute('data-week-idx')));
-    }
+    if (initialActive) renderSummary(Number(initialActive.getAttribute('data-week-idx')));
   </script>
 </Layout>
+
+<style is:global>
+  .bd-empty { padding: 80px 0; text-align: center; color: var(--sc-text-muted-mid); }
+  .bd-hidden { display: none !important; }
+
+  /* tabs */
+  .bd-tabs {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--sc-border-soft);
+  }
+  .bd-tab {
+    padding: 8px 14px;
+    border-radius: var(--sc-radius-pill);
+    border: 1px solid transparent;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--sc-text-muted-mid);
+    transition: all 140ms;
+  }
+  .bd-tab:hover { color: var(--sc-text-primary); background: var(--sc-border-soft); }
+  .bd-tab[data-active="true"] {
+    background: var(--sc-surface-dark);
+    color: var(--sc-text-on-dark);
+    border-color: var(--sc-surface-dark);
+    font-weight: 700;
+  }
+  .bd-tab-date {
+    font-size: 11px;
+    opacity: 0.7;
+    margin-left: 6px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* toolbar */
+  .bd-toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+  .bd-summary { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+  .bd-summary-text { font-size: 14px; color: var(--sc-text-muted-high); }
+  .bd-summary-text b { color: var(--sc-text-primary); font-weight: 700; }
+  .bd-draft-num { color: var(--sc-accent-red); }
+  .bd-legend { display: flex; gap: 12px; font-size: 12px; color: var(--sc-text-muted-mid); }
+  .bd-legend-item { display: inline-flex; align-items: center; gap: 5px; }
+  .bd-dot { width: 8px; height: 8px; border-radius: 999px; flex-shrink: 0; }
+  .bd-dot--done { background: #1F7A3A; }
+  .bd-dot--draft, .bd-dot--drafting { background: var(--sc-accent-yellow); }
+  .bd-dot--empty { background: var(--sc-text-muted-low); }
+  .bd-dot--submitted { background: #1F7A3A; }
+
+  .bd-view-toggle {
+    display: inline-flex;
+    border: 1px solid var(--sc-border-card);
+    border-radius: var(--sc-radius-pill);
+    background: var(--sc-surface-white);
+    padding: 3px;
+  }
+  .bd-view-btn {
+    padding: 6px 14px;
+    border-radius: var(--sc-radius-pill);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--sc-text-muted-mid);
+    transition: all 140ms;
+  }
+  .bd-view-btn[data-active="true"] {
+    background: var(--sc-surface-dark);
+    color: var(--sc-text-on-dark);
+  }
+
+  .bd-panel { display: flex; flex-direction: column; gap: 28px; }
+
+  /* progress grid */
+  .bd-progress-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 10px;
+  }
+  .bd-progress {
+    background: var(--sc-surface-white);
+    border: 1px solid var(--sc-border-card);
+    border-radius: var(--sc-radius-card);
+    padding: 14px;
+  }
+  .bd-progress-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+  .bd-progress-team { font-size: 13px; font-weight: 700; color: var(--sc-text-primary); }
+  .bd-progress-pct { font-size: 12px; color: var(--sc-text-muted-mid); font-variant-numeric: tabular-nums; }
+  .bd-progress-draft { color: var(--sc-accent-red); margin-left: 4px; font-weight: 700; }
+  .bd-progress-bar { height: 6px; background: var(--sc-border-soft); border-radius: 999px; overflow: hidden; }
+  .bd-progress-fill { height: 100%; background: var(--sc-accent-red); transition: width 320ms; }
+
+  @media (max-width: 900px) { .bd-progress-grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 540px) { .bd-progress-grid { grid-template-columns: repeat(2, 1fr); } }
+
+  /* team grid */
+  .bd-team-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+  .bd-team-card {
+    background: var(--sc-surface-white);
+    border: 1px solid var(--sc-border-card);
+    border-radius: var(--sc-radius-card);
+    overflow: hidden;
+  }
+  .bd-team-card-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--sc-border-soft);
+  }
+  .bd-team-card-info { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+  .bd-team-card-team { font-weight: 700; font-size: 15px; color: var(--sc-text-primary); }
+  .bd-team-card-topic { font-size: 12px; color: var(--sc-text-muted-mid); truncate: true; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .bd-team-card-pct { font-weight: 700; font-size: 14px; color: var(--sc-text-primary); }
+  .bd-team-card-list li { border-bottom: 1px solid var(--sc-border-soft); }
+  .bd-team-card-list li:last-child { border-bottom: none; }
+  .bd-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 16px;
+    transition: background 140ms;
+  }
+  .bd-row:hover { background: var(--sc-border-soft); }
+  .bd-row--empty { opacity: 0.5; }
+  .bd-row-name { font-size: 13px; font-weight: 600; color: var(--sc-text-primary); }
+  .bd-row-crew { font-size: 10px; padding: 2px 6px; border-radius: 4px; background: var(--sc-border-soft); color: var(--sc-text-muted-mid); }
+  .bd-row-status { margin-left: auto; font-size: 12px; color: var(--sc-text-muted-mid); }
+
+  @media (max-width: 900px) { .bd-team-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 540px) { .bd-team-grid { grid-template-columns: 1fr; } }
+
+  /* all-view grid */
+  .bd-all-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 6px;
+  }
+  .bd-all-grid.bd-hidden { display: none !important; }
+  .bd-tile {
+    aspect-ratio: 1;
+    background: var(--sc-surface-white);
+    border: 1px solid var(--sc-border-card);
+    border-radius: var(--sc-radius-small);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    position: relative;
+    padding: 4px;
+    transition: border-color 140ms, transform 140ms;
+  }
+  .bd-tile:hover { border-color: var(--sc-text-primary); transform: translateY(-2px); }
+  .bd-tile--empty { opacity: 0.4; }
+  .bd-tile-dot { position: absolute; top: 5px; right: 5px; width: 6px; height: 6px; }
+  .bd-tile-name { font-size: 11px; font-weight: 600; color: var(--sc-text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+
+  @media (max-width: 1080px) { .bd-all-grid { grid-template-columns: repeat(8, 1fr); } }
+  @media (max-width: 720px) { .bd-all-grid { grid-template-columns: repeat(6, 1fr); } }
+  @media (max-width: 480px) { .bd-all-grid { grid-template-columns: repeat(4, 1fr); } }
+
+  .bd-folder-foot {
+    text-align: center;
+    font-size: 11px;
+    color: var(--sc-text-muted-low);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+</style>
