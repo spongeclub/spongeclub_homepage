@@ -1,5 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import SpongeVillage from '../components/SpongeVillage.astro';
 import {
   buildAllWeeks,
   buildWeekArticles,
@@ -21,8 +22,7 @@ const totalMembers = latest ? latest.totalMembers : 0;
 const totalSubmissions = weeks.reduce((sum, w) => sum + w.submittedCount, 0);
 
 const latestArticles = latest ? buildWeekArticles(latest) : [];
-const feature = pickFeature(latestArticles);
-const sideArticles = latestArticles.filter((a) => a !== feature).slice(0, 4);
+pickFeature(latestArticles); // 호환 유지 (사용처 없음)
 
 const pastIssues = [...weeks].reverse().map((w) => {
   const arts = buildWeekArticles(w);
@@ -51,6 +51,20 @@ const weeklyMvps = teamOrder.map((team) => {
   };
 });
 
+// 조별 주차 달성률 — SpongeVillage hero 용
+const villageTeams = teamOrder.map((team) => {
+  if (!latest) return { name: team };
+  const subs = latest.submissions.filter((s) => s.member.team === team);
+  const submitted = subs.filter((s) => s.status === 'submitted').length;
+  const total = subs.length;
+  const rate = total > 0 ? Math.round((submitted / total) * 100) : 0;
+  return {
+    name: team,
+    weeklyAchievementRate: rate,
+    href: `/issue/${latest.weekNumber}/`,
+  };
+});
+
 // 조별 분석 카드 — 90_analysis/teams/Week_0N_조M.md 에서 로드
 const teamAnalyses = latest ? loadTeamAnalyses(latest.weekNumber) : [];
 const teamCards = teamOrder.map((team) => {
@@ -64,388 +78,816 @@ const teamCards = teamOrder.map((team) => {
   };
 });
 
-const vol = (n: number) => `VOL.${String(n).padStart(2, '0')}`;
+const weekLabel = (n: number) => `WEEK ${String(n).padStart(2, '0')}`;
 const year = new Date().getFullYear();
 ---
 
-<Layout title="스폰지클럽 — 매주 만들고, 각자 나눈다" bodyClass="mag">
-  <!-- ═══ NAV ═══ -->
-  <nav class="nav">
-    <div class="wrap nav-inner">
-      <a href="/" class="brand">
-        <span class="brand-shapes" aria-hidden="true">
-          <span class="s-c"></span>
-          <span class="s-s"></span>
-          <span class="s-t"></span>
-        </span>
-        <span>스폰지클럽</span>
+<Layout title="스폰지클럽 — 매주 만들고, 각자 나눈다" bodyClass="hp-body">
+  <!-- ─── HEADER ─────────────────────────────────────── -->
+  <header class="hp-header">
+    <div class="hp-header-inner">
+      <a href="/" class="hp-brand">
+        <span class="hp-brand-mark">🧽</span>
+        <span class="hp-brand-name">spongeclub</span>
       </a>
-      <div class="nav-links">
-        <a href="#about">소개</a>
+      <nav class="hp-nav" aria-label="메인 메뉴">
         <a href="#this-issue">이번 호</a>
         <a href="/keywords/">키워드</a>
-        <a href="/skills/">스킬모음</a>
+        <a href="/skills/">스킬</a>
         <a href="/gallery/">갤러리</a>
-      </div>
-      {latest && <span class="nav-vol">{vol(latest.weekNumber)}</span>}
+        <a href="#archive">지난 호</a>
+      </nav>
+      {latest && (
+        <span class="hp-week-pill">{weekLabel(latest.weekNumber)}</span>
+      )}
     </div>
-  </nav>
+  </header>
 
-  <main class="wrap">
-    {!hasData && (
-      <section class="hero">
-        <h1 class="hero-title">스폰지클럽</h1>
-        <p class="hero-lede">아직 발행된 호가 없습니다.</p>
-      </section>
-    )}
+  {!hasData && (
+    <main class="hp-empty">
+      <h1>스폰지클럽</h1>
+      <p>아직 발행된 호가 없습니다.</p>
+    </main>
+  )}
 
-    {hasData && (
-      <>
-        <!-- ═══ HERO / 소개 ═══ -->
-        <section class="hero" id="about">
-          <div class="hero-deco" aria-hidden="true">
-            <span class="d-c"></span>
-            <span class="d-s"></span>
-          </div>
-          <div class="hero-kicker reveal d1">
-            <span>스폰지클럽 — <b>매주 만들고, 각자 나눈다</b></span>
-            <span>{latest && vol(latest.weekNumber)} · {year}</span>
-          </div>
-          <h1 class="hero-title reveal d2">
+  {hasData && (
+    <>
+      <!-- ─── HERO (잡지 표지: 텍스트 + 비키니바텀 마을) ───── -->
+      <section class="hp-hero">
+        <div class="hp-hero-text">
+          {latest && <span class="hp-hero-kicker">{weekLabel(latest.weekNumber)} · {year}</span>}
+          <h1 class="hp-hero-title">
             매주 만들고,<br />
-            <em>각자</em> 나눈다.
+            <span class="hp-highlight">각자</span> 나눈다.
           </h1>
-          <p class="hero-lede reveal d3">
+          <p class="hp-hero-lede">
             {totalMembers}명이 매주 무언가를 만들고, 그 과정을 기록하는 AI 빌더 커뮤니티.<br />
-            이 페이지는 매주 한 호씩 발행되는 그 기록입니다.
+            아래는 이번 호 <b>{latest && weekLabel(latest.weekNumber)}</b> 6개 조의 진척도.
           </p>
-          <div class="hero-stats reveal d4">
-            <div>
-              <div class="n">{String(totalWeeks).padStart(2, '0')}</div>
-              <div class="l">발행 호 / Issues</div>
-            </div>
-            <div>
-              <div class="n">{totalMembers}</div>
-              <div class="l">멤버 / Members</div>
-            </div>
-            <div>
-              <div class="n">{totalSubmissions}</div>
-              <div class="l">누적 기록 / Records</div>
-            </div>
-            <div>
-              <div class="n">06</div>
-              <div class="l">조 / Teams</div>
-            </div>
+          <div class="hp-hero-cta">
+            <a class="hp-btn hp-btn-dark" href="#this-issue">이번 호 보기 →</a>
+            <a class="hp-btn hp-btn-ghost" href="#archive">지난 호</a>
           </div>
-        </section>
+        </div>
 
-        <!-- ═══ 이번 주 MVP ═══ -->
-        <section class="s" id="mvp">
-          <div class="s-head">
-            <div>
-              <div class="s-num">{latest && vol(latest.weekNumber)} — MVP</div>
-              <h2 class="s-title">이번 주 <em>MVP</em></h2>
-            </div>
-            <p class="s-desc">
-              6개 조에서 한 명씩 — 이번 호의 6인.
-            </p>
+        <div class="hp-hero-village">
+          <SpongeVillage teams={villageTeams} />
+        </div>
+      </section>
+
+      <!-- ─── STATS 옐로우 시그니처 띠 ────────────── -->
+      <section class="hp-stats">
+        <div class="hp-stats-inner">
+          <div class="hp-stat">
+            <span class="hp-stat-num">{String(totalWeeks).padStart(2, '0')}</span>
+            <span class="hp-stat-label">발행 호</span>
           </div>
-          <div class="mvp-grid">
+          <div class="hp-stat">
+            <span class="hp-stat-num">{totalMembers}</span>
+            <span class="hp-stat-label">멤버</span>
+          </div>
+          <div class="hp-stat">
+            <span class="hp-stat-num">{totalSubmissions}</span>
+            <span class="hp-stat-label">누적 기록</span>
+          </div>
+          <div class="hp-stat">
+            <span class="hp-stat-num">06</span>
+            <span class="hp-stat-label">조</span>
+          </div>
+        </div>
+      </section>
+
+      <main class="hp-main">
+
+        <!-- ─── ● MVP ──────────────────────────────── -->
+        <section class="hp-section" id="mvp">
+          <div class="hp-sh">
+            <span class="sc-shape sc-shape--circle" aria-hidden="true"></span>
+            <h2 class="hp-sh-title">이번 호 MVP</h2>
+            <p class="hp-sh-desc">6개 조에서 한 명씩 — 이번 호의 6인</p>
+          </div>
+          <div class="hp-mvp-grid">
             {weeklyMvps.map((m) => (
-              <a class="mvp-card" href={m.url}>
-                <div class="mvp-team">{m.team}</div>
-                <div class="mvp-name">{m.nickname}</div>
-                <div class="mvp-title">{m.title}</div>
-                {m.reason && <div class="mvp-reason">★ {m.reason}</div>}
+              <a class="hp-mvp-card" href={m.url}>
+                <span class="hp-mvp-team">{m.team}</span>
+                <span class="hp-mvp-name">{m.nickname}</span>
+                <p class="hp-mvp-title">{m.title}</p>
+                {m.reason && <p class="hp-mvp-reason">★ {m.reason}</p>}
               </a>
             ))}
           </div>
         </section>
 
-        <!-- ═══ 신규 등록 스킬 TOP 3 ═══ -->
-        {latestSkills.length > 0 && (
-          <section class="s" id="new-skills">
-            <div class="s-head">
-              <div>
-                <div class="s-num">NEW DROP</div>
-                <h2 class="s-title">방금 등록된 <em>스킬</em></h2>
-              </div>
-              <p class="s-desc">
-                이번 주 새로 들어온 스킬 후기 — 따끈할 때 보세요.
-              </p>
-            </div>
-            <div class="skills-top3">
-              {latestSkills.map((sk) => (
-                <a class="skill-card" href={`/skills/#${sk.slug}`}>
-                  <div class="skill-meta">
-                    <span class="sk-cat">{sk.category}</span>
-                    {sk.created && <span class="sk-date">{sk.created}</span>}
-                  </div>
-                  <div class="skill-name">{sk.skillName || sk.title}</div>
-                  <div class="skill-summary">{sk.summary}</div>
-                  <div class="skill-foot">
-                    {sk.userCount > 0 && <span>🔥 {sk.userCount}명이 써봄</span>}
-                  </div>
-                </a>
-              ))}
-            </div>
-            <div class="skills-more">
-              <a class="more-cta" href="/skills/">스킬모음 전체 보기 →</a>
-            </div>
-          </section>
-        )}
-
-        <!-- ═══ 이번 호 ═══ -->
+        <!-- ─── ■ 이번 호 (조별 기록) ─────────────── -->
         {latest && (
-          <section class="s" id="this-issue">
-            <div class="s-head">
-              <div>
-                <div class="s-num">{vol(latest.weekNumber)} — 이번 호</div>
-                <h2 class="s-title">{latest.weekNumber}주차의 <em>기록</em></h2>
-              </div>
-              <p class="s-desc">
-                {latestArticles.length}명이 이번 주 만든 것을 기록했다.
-                전체는 이슈 페이지에서.
+          <section class="hp-section" id="this-issue">
+            <div class="hp-sh">
+              <span class="sc-shape sc-shape--square" aria-hidden="true"></span>
+              <h2 class="hp-sh-title">{latest.weekNumber}주차의 기록</h2>
+              <p class="hp-sh-desc">
+                {latestArticles.length}명이 이번 주 만든 것 — 전체는 이슈 페이지에서.
               </p>
             </div>
-
-            <div class="team-grid">
+            <div class="hp-team-grid">
               {teamCards.map((t) => (
-                <article class="team-card">
-                  <div class="tc-head">
-                    <span class="tc-team">{t.team}</span>
-                    <span class="tc-theme">{t.theme}</span>
-                  </div>
-                  <div class="tc-body">
-                    <div class="tc-section">
-                      <div class="tc-label">요약</div>
-                      <p class="tc-text">{t.summary}</p>
+                <article class="hp-team-card">
+                  <header class="hp-team-card-head">
+                    <span class="hp-team-card-team">{t.team}</span>
+                    <h3 class="hp-team-card-theme">{t.theme}</h3>
+                  </header>
+                  <div class="hp-team-card-body">
+                    <div class="hp-team-card-block">
+                      <span class="hp-team-card-label">요약</span>
+                      <p class="hp-team-card-text">{t.summary}</p>
                     </div>
-                    <div class="tc-section tc-insight">
-                      <div class="tc-label">★ 클로드 인사이트</div>
-                      <p class="tc-text">{t.insight}</p>
-                    </div>
+                    {t.insight && (
+                      <div class="hp-team-card-block hp-team-card-block--insight">
+                        <span class="hp-team-card-label">★ 클로드 인사이트</span>
+                        <p class="hp-team-card-text">{t.insight}</p>
+                      </div>
+                    )}
                   </div>
                 </article>
               ))}
             </div>
-            <div class="issue-cta-row">
-              <a class="more-cta" href={`/issue/${latest.weekNumber}/`}>
+            <div class="hp-more">
+              <a class="hp-more-link" href={`/issue/${latest.weekNumber}/`}>
                 이번 호 전체 기록 보기 →
               </a>
             </div>
           </section>
         )}
 
-        <!-- ═══ 지난 호 ═══ -->
-        <section class="s" id="archive">
-          <div class="s-head">
-            <div>
-              <div class="s-num">아카이브</div>
-              <h2 class="s-title">지난 <em>호</em></h2>
+        <!-- ─── ▲ 신규 스킬 ───────────────────────── -->
+        {latestSkills.length > 0 && (
+          <section class="hp-section" id="new-skills">
+            <div class="hp-sh">
+              <span class="sc-shape sc-shape--triangle" aria-hidden="true"></span>
+              <h2 class="hp-sh-title">방금 등록된 스킬</h2>
+              <p class="hp-sh-desc">이번 주 새로 들어온 스킬 후기 — 따끈할 때 보세요.</p>
             </div>
-            <p class="s-desc">
-              매주 한 호씩. 한 호를 열면 그 주의 모든 기록이 조별로 펼쳐진다.
-            </p>
+            <div class="hp-skills-grid">
+              {latestSkills.map((sk) => (
+                <a class="hp-skill-card" href={`/skills/#${sk.slug}`}>
+                  <div class="hp-skill-meta">
+                    <span class="hp-skill-cat">{sk.category}</span>
+                    {sk.created && <span class="hp-skill-date">{sk.created}</span>}
+                  </div>
+                  <h3 class="hp-skill-name">{sk.summary || sk.skillName || sk.title}</h3>
+                  <p class="hp-skill-handle">{sk.skillName}</p>
+                  {sk.userCount > 0 && (
+                    <span class="hp-skill-fire">🔥 {sk.userCount}명이 써봄</span>
+                  )}
+                </a>
+              ))}
+            </div>
+            <div class="hp-more">
+              <a class="hp-more-link" href="/skills/">스킬 전체 보기 →</a>
+            </div>
+          </section>
+        )}
+
+        <!-- ─── ■ 지난 호 ──────────────────────────── -->
+        <section class="hp-section" id="archive">
+          <div class="hp-sh">
+            <span class="sc-shape sc-shape--square" aria-hidden="true"></span>
+            <h2 class="hp-sh-title">지난 호</h2>
+            <p class="hp-sh-desc">매주 한 호씩 — 열면 그 주의 모든 기록이 조별로 펼쳐집니다.</p>
           </div>
-          <div class="issue-grid">
+          <div class="hp-issue-grid">
             {pastIssues.map(({ week, theme, count }) => (
-              <a class="issue-card" href={`/issue/${week.weekNumber}/`}>
-                <span class="ic-vol">{vol(week.weekNumber)}</span>
-                <span class="ic-title">
+              <a class="hp-issue-card" href={`/issue/${week.weekNumber}/`}>
+                <span class="hp-issue-vol">{weekLabel(week.weekNumber)}</span>
+                <h3 class="hp-issue-title">
                   {theme || `${week.weekNumber}주차의 기록`}
-                </span>
-                <span class="ic-meta">
+                </h3>
+                <span class="hp-issue-meta">
                   {count}개 기록{week.dateLabel ? ` · ${week.dateLabel}` : ''}
                 </span>
               </a>
             ))}
           </div>
         </section>
-      </>
-    )}
-  </main>
 
-  <!-- ═══ FOOTER ═══ -->
-  <footer class="mag-footer">
-    <div class="wrap">
-      <div class="fo-grid">
-        <div class="fo-pitch">
-          매주 만들고,<br /><em>각자</em> 나눈다.
-        </div>
-        <div class="fo-col">
+        <!-- ─── DARK CTA (한 페이지 1개) ──────────── -->
+        <section class="hp-cta">
+          <p class="hp-cta-head">매주 한 호씩,<br />스폰지클럽.</p>
+          <p class="hp-cta-body">
+            새 호가 발행되면 가장 먼저 알려드립니다.
+          </p>
+          <a class="hp-cta-btn"
+             href="https://spongeclub-community.vercel.app/"
+             target="_blank" rel="noopener noreferrer">
+            커뮤니티 열기 →
+          </a>
+        </section>
+      </main>
+    </>
+  )}
+
+  <!-- ─── FOOTER ─────────────────────────────────── -->
+  <footer class="hp-footer">
+    <div class="hp-footer-inner">
+      <div class="hp-footer-brand">
+        <span class="hp-brand-name">spongeclub</span>
+        <p class="hp-footer-pitch">매주 만들고, <span class="hp-highlight">각자</span> 나눈다.</p>
+      </div>
+      <div class="hp-footer-cols">
+        <div class="hp-footer-col">
           <h4>둘러보기</h4>
           <ul>
-            <li><a href="#about">소개</a></li>
             <li><a href="#this-issue">이번 호</a></li>
-            <li><a href="/keywords/">키워드 분석</a></li>
-            <li><a href="/skills/">스킬 사이트 모음</a></li>
-            <li><a href="/gallery/">산출물 갤러리</a></li>
+            <li><a href="/keywords/">키워드</a></li>
+            <li><a href="/skills/">스킬</a></li>
+            <li><a href="/gallery/">갤러리</a></li>
           </ul>
         </div>
-        <div class="fo-col">
+        <div class="hp-footer-col">
           <h4>연결</h4>
           <ul>
-            <li><a href="https://github.com/spongeclub/spongeclub_1">GitHub</a></li>
-            <li><a href="#about">참여 안내</a></li>
+            <li><a href="https://github.com/spongeclub/spongeclub_1" target="_blank" rel="noopener noreferrer">GitHub</a></li>
+            <li><a href="https://spongeclub-community.vercel.app/" target="_blank" rel="noopener noreferrer">커뮤니티</a></li>
           </ul>
         </div>
       </div>
-      <div class="fo-bot">
-        <span>© {year} SPONGECLUB — Built every week.</span>
-        <span>SEOUL / REPUBLIC OF KOREA</span>
-      </div>
+    </div>
+    <div class="hp-footer-bot">
+      © {year} SPONGECLUB · Seoul · Republic of Korea
     </div>
   </footer>
 </Layout>
 
 <style is:global>
-/* ─── HERO: 이번 주 MVP ─────────────────────────── */
-.hero-mvp .hero-title { margin-bottom: 12px; }
-.hero-mvp .hero-lede { margin-bottom: 36px; }
+  /* ═══════════════════════════════════════════════════════
+     /index — 스폰지클럽 디자인 시스템 적용 (hp-* prefix)
+     ═══════════════════════════════════════════════════════ */
 
-.mvp-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0;
-  border: 4px solid var(--fg);
-  background: var(--white);
-}
-.mvp-card {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 24px 22px;
-  border-right: 4px solid var(--fg);
-  border-bottom: 4px solid var(--fg);
-  text-decoration: none;
-  color: var(--fg);
-  background: var(--white);
-  transition: background 0.15s;
-}
-.mvp-card:nth-child(3n) { border-right: none; }
-.mvp-card:nth-last-child(-n+3) { border-bottom: none; }
-.mvp-card:hover { background: var(--key); }
-.mvp-team {
-  display: inline-block;
-  font-size: 11px;
-  font-weight: 900;
-  letter-spacing: 0.08em;
-  padding: 4px 8px;
-  background: var(--fg);
-  color: var(--white);
-  align-self: flex-start;
-}
-.mvp-name { font-size: 22px; font-weight: 900; line-height: 1.2; }
-.mvp-title { font-size: 14px; font-weight: 700; line-height: 1.4; color: var(--fg); }
-.mvp-excerpt { font-size: 13px; line-height: 1.55; color: #555; }
-.mvp-reason { font-size: 12px; line-height: 1.55; color: #555; border-left: 3px solid var(--key); padding-left: 8px; margin-top: 4px; }
+  body.hp-body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--sc-bg-base);
+    color: var(--sc-text-primary);
+    font-family: var(--sc-font-body);
+    font-weight: 400;
+    line-height: 1.55;
+    letter-spacing: -0.005em;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  body.hp-body * { box-sizing: border-box; }
+  body.hp-body h1, body.hp-body h2, body.hp-body h3, body.hp-body h4, body.hp-body p, body.hp-body ul { margin: 0; padding: 0; }
+  body.hp-body ul { list-style: none; }
+  body.hp-body a { color: inherit; text-decoration: none; }
+  body.hp-body button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
 
-@media (max-width: 900px) {
-  .mvp-grid { grid-template-columns: repeat(2, 1fr); }
-  .mvp-card:nth-child(3n) { border-right: 4px solid var(--fg); }
-  .mvp-card:nth-child(2n) { border-right: none; }
-  .mvp-card:nth-last-child(-n+3) { border-bottom: 4px solid var(--fg); }
-  .mvp-card:nth-last-child(-n+2) { border-bottom: none; }
-}
-@media (max-width: 560px) {
-  .mvp-grid { grid-template-columns: 1fr; }
-  .mvp-card { border-right: none !important; border-bottom: 4px solid var(--fg) !important; }
-  .mvp-card:last-child { border-bottom: none !important; }
-}
+  /* ─── 공통 ─── */
+  .hp-highlight {
+    background: linear-gradient(transparent 55%, var(--sc-highlight-orange) 55%);
+    font-weight: 700;
+    padding: 0 4px;
+  }
 
-/* ─── 신규 스킬 TOP 3 ────────────────────────────── */
-.skills-top3 {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0;
-  border: 4px solid var(--fg);
-  background: var(--white);
-}
-.skill-card {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 22px;
-  border-right: 4px solid var(--fg);
-  text-decoration: none;
-  color: var(--fg);
-  background: var(--white);
-  transition: background 0.15s;
-}
-.skill-card:last-child { border-right: none; }
-.skill-card:hover { background: var(--key); }
-.skill-meta { display: flex; justify-content: space-between; align-items: center; font-size: 11px; }
-.sk-cat { font-weight: 900; letter-spacing: 0.08em; }
-.sk-date { color: #777; font-variant-numeric: tabular-nums; }
-.skill-name { font-size: 22px; font-weight: 900; line-height: 1.2; }
-.skill-summary { font-size: 14px; line-height: 1.5; color: #333; }
-.skill-foot { font-size: 12px; color: #555; margin-top: auto; padding-top: 8px; }
+  /* ─── HEADER ─── */
+  .hp-header {
+    position: sticky; top: 0; z-index: 30;
+    background: var(--sc-bg-base);
+    border-bottom: 1px solid var(--sc-border-soft);
+  }
+  .hp-header-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+    height: 64px;
+    display: flex; align-items: center; gap: 24px;
+  }
+  .hp-brand {
+    display: inline-flex; align-items: baseline; gap: 8px;
+    flex-shrink: 0;
+  }
+  .hp-brand-mark { font-size: 22px; line-height: 1; }
+  .hp-brand-name {
+    font-family: var(--sc-font-display);
+    font-weight: 400;
+    font-size: 24px;
+    letter-spacing: -0.01em;
+    color: var(--sc-text-primary);
+  }
+  .hp-nav {
+    display: flex; align-items: center; gap: 22px;
+    margin-left: auto;
+    font-size: 14px;
+    font-weight: 500;
+  }
+  .hp-nav a {
+    color: var(--sc-text-muted-mid);
+    transition: color 160ms;
+  }
+  .hp-nav a:hover { color: var(--sc-text-primary); }
+  .hp-week-pill {
+    flex-shrink: 0;
+    font-family: var(--sc-font-body);
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    padding: 7px 14px;
+    border-radius: var(--sc-radius-pill);
+    background: var(--sc-bg-signature);
+    color: var(--sc-text-primary);
+  }
+  @media (max-width: 860px) {
+    .hp-nav { gap: 14px; font-size: 13px; }
+    .hp-nav a:nth-child(4),
+    .hp-nav a:nth-child(5) { display: none; }
+  }
+  @media (max-width: 540px) {
+    .hp-nav a:nth-child(2),
+    .hp-nav a:nth-child(3) { display: none; }
+  }
 
-@media (max-width: 900px) {
-  .skills-top3 { grid-template-columns: 1fr; }
-  .skill-card { border-right: none; border-bottom: 4px solid var(--fg); }
-  .skill-card:last-child { border-bottom: none; }
-}
+  /* ─── HERO (잡지 표지) ─── */
+  .hp-hero {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: clamp(40px, 6vw, 72px) 24px clamp(24px, 4vw, 48px);
+    display: flex; flex-direction: column;
+    gap: clamp(28px, 4vw, 48px);
+  }
+  .hp-hero-text {
+    display: flex; flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
+  }
+  .hp-hero-village {
+    width: 100%;
+  }
+  .hp-hero-kicker {
+    font-family: var(--sc-font-body);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    color: var(--sc-text-primary);
+    background: var(--sc-surface-white);
+    padding: 8px 16px;
+    border-radius: var(--sc-radius-pill);
+    align-self: flex-start;
+  }
+  .hp-hero-title {
+    font-family: var(--sc-font-display);
+    font-weight: 400;
+    font-size: clamp(52px, 9vw, 116px);
+    line-height: 1.04;
+    letter-spacing: -0.015em;
+    color: var(--sc-text-primary);
+    max-width: 900px;
+  }
+  .hp-hero-lede {
+    font-size: clamp(15px, 1.6vw, 19px);
+    font-weight: 500;
+    line-height: 1.7;
+    color: var(--sc-text-muted-high);
+    max-width: 640px;
+  }
+  .hp-hero-cta {
+    margin-top: 12px;
+    display: flex; gap: 12px; flex-wrap: wrap;
+  }
+  .hp-btn {
+    padding: 13px 24px;
+    border-radius: var(--sc-radius-pill);
+    font-weight: 700;
+    font-size: 14px;
+    transition: filter 160ms, transform 160ms, background 160ms;
+  }
+  .hp-btn-dark {
+    background: var(--sc-surface-dark);
+    color: var(--sc-text-on-dark);
+  }
+  .hp-btn-dark:hover { transform: translateY(-1px); filter: brightness(1.06); }
+  .hp-btn-ghost {
+    background: transparent;
+    color: var(--sc-text-primary);
+    border: 1.5px solid var(--sc-text-primary);
+  }
+  .hp-btn-ghost:hover { background: var(--sc-text-primary); color: var(--sc-bg-signature); }
 
-.skills-more, .issue-cta-row {
-  margin-top: 18px;
-  text-align: right;
-}
-.more-cta {
-  display: inline-block;
-  font-weight: 900;
-  text-decoration: none;
-  color: var(--fg);
-  border-bottom: 3px solid var(--fg);
-  padding-bottom: 2px;
-}
-.more-cta:hover { color: var(--red); border-color: var(--red); }
+  /* ─── STATS 옐로우 띠 (시그니처 옐로우 사용처 1) ─── */
+  .hp-stats {
+    background: var(--sc-bg-signature);
+    border-top: 1px solid rgba(26, 31, 54, 0.10);
+    border-bottom: 1px solid rgba(26, 31, 54, 0.10);
+  }
+  .hp-stats-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+  .hp-stat {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 4px;
+    text-align: center;
+  }
+  .hp-stat-num {
+    font-family: var(--sc-font-display);
+    font-weight: 400;
+    font-size: clamp(34px, 4vw, 52px);
+    line-height: 1;
+    color: var(--sc-text-primary);
+    font-variant-numeric: tabular-nums;
+  }
+  .hp-stat-label {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(26, 31, 54, 0.65);
+  }
+  @media (max-width: 600px) {
+    .hp-stats-inner { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  }
 
-/* ─── 6조 카드 그리드 ────────────────────────────── */
-.team-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0;
-  border: 4px solid var(--fg);
-  background: var(--white);
-}
-.team-card {
-  display: flex;
-  flex-direction: column;
-  border-right: 4px solid var(--fg);
-  border-bottom: 4px solid var(--fg);
-  background: var(--white);
-}
-.team-card:nth-child(3n) { border-right: none; }
-.team-card:nth-last-child(-n+3) { border-bottom: none; }
-.tc-head {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 16px 20px;
-  background: var(--fg);
-  color: var(--white);
-}
-.tc-team { font-size: 12px; font-weight: 900; letter-spacing: 0.1em; opacity: 0.7; }
-.tc-theme { font-size: 17px; font-weight: 900; line-height: 1.3; }
-.tc-body { padding: 18px 20px; display: flex; flex-direction: column; gap: 14px; }
-.tc-section { display: flex; flex-direction: column; gap: 4px; }
-.tc-label { font-size: 11px; font-weight: 900; letter-spacing: 0.08em; color: #777; }
-.tc-text { font-size: 13px; line-height: 1.55; color: var(--fg); margin: 0; }
-.tc-insight .tc-label { color: var(--red); }
-.tc-insight .tc-text { background: var(--key); padding: 8px 10px; }
+  /* ─── MAIN ─── */
+  .hp-main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 56px 24px 80px;
+    display: flex; flex-direction: column; gap: 64px;
+  }
 
-@media (max-width: 900px) {
-  .team-grid { grid-template-columns: repeat(2, 1fr); }
-  .team-card:nth-child(3n) { border-right: 4px solid var(--fg); }
-  .team-card:nth-child(2n) { border-right: none; }
-  .team-card:nth-last-child(-n+3) { border-bottom: 4px solid var(--fg); }
-  .team-card:nth-last-child(-n+2) { border-bottom: none; }
-}
-@media (max-width: 560px) {
-  .team-grid { grid-template-columns: 1fr; }
-  .team-card { border-right: none !important; border-bottom: 4px solid var(--fg) !important; }
-  .team-card:last-child { border-bottom: none !important; }
-}
+  /* ─── SECTION HEADING ─── */
+  .hp-section { display: flex; flex-direction: column; gap: 24px; }
+  .hp-sh {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    column-gap: 18px;
+    row-gap: 4px;
+    align-items: end;
+  }
+  .hp-sh .sc-shape {
+    grid-row: 1 / span 2;
+    align-self: end;
+    margin-bottom: 8px;
+  }
+  .hp-sh-title {
+    font-family: var(--sc-font-display);
+    font-weight: 400;
+    font-size: clamp(34px, 4.6vw, 56px);
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    color: var(--sc-text-primary);
+  }
+  .hp-sh-desc {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--sc-text-muted-mid);
+    margin-top: -2px;
+  }
+
+  /* ─── MVP 그리드 ─── */
+  .hp-mvp-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+  .hp-mvp-card {
+    background: var(--sc-surface-white);
+    border: 1px solid var(--sc-border-card);
+    border-radius: var(--sc-radius-card);
+    padding: 22px 22px 20px;
+    display: flex; flex-direction: column; gap: 8px;
+    transition: transform 160ms, box-shadow 160ms, border-color 160ms;
+  }
+  .hp-mvp-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(26, 31, 54, 0.07);
+    border-color: var(--sc-accent-blue);
+  }
+  .hp-mvp-team {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    background: var(--sc-accent-blue);
+    color: var(--sc-surface-white);
+    border-radius: var(--sc-radius-pill);
+    align-self: flex-start;
+  }
+  .hp-mvp-name {
+    font-family: var(--sc-font-display);
+    font-weight: 400;
+    font-size: 30px;
+    line-height: 1.15;
+    color: var(--sc-text-primary);
+    margin-top: 4px;
+  }
+  .hp-mvp-title {
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.45;
+    color: var(--sc-text-primary);
+  }
+  .hp-mvp-reason {
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--sc-text-muted-high);
+    padding: 8px 12px;
+    background: rgba(255, 230, 122, 0.40);
+    border-radius: 8px;
+    margin-top: 6px;
+  }
+  @media (max-width: 900px) { .hp-mvp-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 560px) { .hp-mvp-grid { grid-template-columns: 1fr; } }
+
+  /* ─── 조별 그리드 ─── */
+  .hp-team-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+  .hp-team-card {
+    background: var(--sc-surface-white);
+    border: 1px solid var(--sc-border-card);
+    border-radius: var(--sc-radius-card);
+    display: flex; flex-direction: column;
+    overflow: hidden;
+    transition: transform 160ms, box-shadow 160ms, border-color 160ms;
+  }
+  .hp-team-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(26, 31, 54, 0.07);
+    border-color: var(--sc-accent-red);
+  }
+  .hp-team-card-head {
+    padding: 16px 20px;
+    background: var(--sc-text-primary);
+    color: var(--sc-bg-signature);
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .hp-team-card-team {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.10em;
+    opacity: 0.75;
+  }
+  .hp-team-card-theme {
+    font-family: var(--sc-font-display);
+    font-weight: 400;
+    font-size: 22px;
+    line-height: 1.2;
+    color: var(--sc-bg-signature);
+  }
+  .hp-team-card-body {
+    padding: 18px 20px 20px;
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  .hp-team-card-block { display: flex; flex-direction: column; gap: 6px; }
+  .hp-team-card-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--sc-text-muted-mid);
+  }
+  .hp-team-card-block--insight .hp-team-card-label { color: var(--sc-accent-red); }
+  .hp-team-card-text {
+    font-size: 13.5px;
+    line-height: 1.65;
+    color: var(--sc-text-primary);
+  }
+  .hp-team-card-block--insight .hp-team-card-text {
+    background: rgba(255, 230, 122, 0.40);
+    padding: 8px 10px;
+    border-radius: 8px;
+  }
+  @media (max-width: 900px) { .hp-team-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 560px) { .hp-team-grid { grid-template-columns: 1fr; } }
+
+  /* ─── 신규 스킬 그리드 ─── */
+  .hp-skills-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+  .hp-skill-card {
+    background: var(--sc-surface-white);
+    border: 1px solid var(--sc-border-card);
+    border-radius: var(--sc-radius-card);
+    padding: 20px 22px 18px;
+    display: flex; flex-direction: column; gap: 10px;
+    transition: transform 160ms, box-shadow 160ms, border-color 160ms;
+  }
+  .hp-skill-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(26, 31, 54, 0.07);
+    border-color: var(--sc-accent-yellow);
+  }
+  .hp-skill-meta {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 11px;
+  }
+  .hp-skill-cat {
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 3px 9px;
+    border-radius: 6px;
+    background: rgba(23, 86, 232, 0.10);
+    color: var(--sc-accent-blue);
+  }
+  .hp-skill-date { color: var(--sc-text-muted-low); font-variant-numeric: tabular-nums; }
+  .hp-skill-name {
+    font-family: var(--sc-font-body);
+    font-weight: 700;
+    font-size: 18px;
+    line-height: 1.35;
+    letter-spacing: -0.015em;
+    color: var(--sc-text-primary);
+  }
+  .hp-skill-handle {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12px;
+    color: var(--sc-text-muted-mid);
+  }
+  .hp-skill-fire {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--sc-text-primary);
+    background: var(--sc-bg-signature);
+    padding: 4px 11px;
+    border-radius: var(--sc-radius-pill);
+    align-self: flex-start;
+    margin-top: auto;
+  }
+  @media (max-width: 900px) { .hp-skills-grid { grid-template-columns: 1fr; } }
+
+  /* ─── 지난 호 그리드 ─── */
+  .hp-issue-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px;
+  }
+  .hp-issue-card {
+    background: var(--sc-surface-white);
+    border: 1px solid var(--sc-border-card);
+    border-radius: var(--sc-radius-card);
+    padding: 18px 20px;
+    display: flex; flex-direction: column; gap: 10px;
+    transition: transform 160ms, box-shadow 160ms, border-color 160ms;
+  }
+  .hp-issue-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(26, 31, 54, 0.07);
+    border-color: var(--sc-accent-red);
+  }
+  .hp-issue-vol {
+    font-family: var(--sc-font-body);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.10em;
+    color: var(--sc-accent-red);
+  }
+  .hp-issue-title {
+    font-family: var(--sc-font-display);
+    font-weight: 400;
+    font-size: 22px;
+    line-height: 1.2;
+    color: var(--sc-text-primary);
+  }
+  .hp-issue-meta {
+    font-size: 12px;
+    color: var(--sc-text-muted-mid);
+    margin-top: auto;
+    padding-top: 8px;
+    border-top: 1px solid var(--sc-border-soft);
+    font-weight: 500;
+  }
+
+  /* ─── more link ─── */
+  .hp-more { display: flex; justify-content: flex-end; }
+  .hp-more-link {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--sc-text-primary);
+    padding: 8px 0;
+    border-bottom: 2px solid var(--sc-text-primary);
+  }
+  .hp-more-link:hover { color: var(--sc-accent-red); border-bottom-color: var(--sc-accent-red); }
+
+  /* ─── DARK CTA ─── */
+  .hp-cta {
+    background: var(--sc-surface-dark);
+    color: var(--sc-text-on-dark);
+    border-radius: var(--sc-radius-card);
+    padding: clamp(36px, 6vw, 64px);
+    display: flex; flex-direction: column; align-items: center;
+    text-align: center;
+    gap: 14px;
+  }
+  .hp-cta-head {
+    font-family: var(--sc-font-display);
+    font-weight: 400;
+    font-size: clamp(34px, 5vw, 60px);
+    line-height: 1.1;
+    color: var(--sc-text-on-dark);
+  }
+  .hp-cta-body {
+    font-size: 15px;
+    color: rgba(255, 251, 237, 0.78);
+    line-height: 1.7;
+    max-width: 480px;
+  }
+  .hp-cta-btn {
+    margin-top: 8px;
+    padding: 14px 28px;
+    border-radius: var(--sc-radius-pill);
+    background: var(--sc-bg-signature);
+    color: var(--sc-text-primary);
+    font-weight: 700;
+    font-size: 15px;
+    transition: filter 160ms, transform 160ms;
+  }
+  .hp-cta-btn:hover { filter: brightness(1.05); transform: translateY(-1px); }
+
+  /* ─── FOOTER ─── */
+  .hp-footer {
+    background: var(--sc-bg-base);
+    border-top: 1px solid var(--sc-border-soft);
+    padding: 56px 24px 24px;
+    margin-top: 40px;
+  }
+  .hp-footer-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 40px;
+    padding-bottom: 32px;
+    border-bottom: 1px solid var(--sc-border-soft);
+  }
+  .hp-footer-brand .hp-brand-name { font-size: 28px; }
+  .hp-footer-pitch {
+    font-family: var(--sc-font-display);
+    font-weight: 400;
+    font-size: clamp(22px, 2.4vw, 32px);
+    line-height: 1.25;
+    color: var(--sc-text-primary);
+    margin-top: 10px;
+    max-width: 420px;
+  }
+  .hp-footer-cols { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+  .hp-footer-col h4 {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    color: var(--sc-text-muted-mid);
+    margin-bottom: 12px;
+  }
+  .hp-footer-col li { margin: 6px 0; }
+  .hp-footer-col a {
+    font-size: 14px;
+    color: var(--sc-text-primary);
+    font-weight: 500;
+  }
+  .hp-footer-col a:hover { color: var(--sc-accent-red); }
+  .hp-footer-bot {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding-top: 20px;
+    font-size: 12px;
+    color: var(--sc-text-muted-low);
+  }
+  @media (max-width: 700px) {
+    .hp-footer-inner { grid-template-columns: 1fr; gap: 28px; }
+  }
+
+  /* ─── EMPTY ─── */
+  .hp-empty {
+    max-width: 700px;
+    margin: 100px auto;
+    text-align: center;
+    padding: 0 24px;
+  }
+  .hp-empty h1 {
+    font-family: var(--sc-font-display);
+    font-size: 64px;
+    font-weight: 400;
+    color: var(--sc-text-primary);
+  }
+  .hp-empty p { margin-top: 12px; color: var(--sc-text-muted-mid); }
+
+  /* ─── A11Y ─── */
+  body.hp-body a:focus-visible,
+  body.hp-body button:focus-visible {
+    outline: 3px solid var(--sc-accent-blue);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hp-mvp-card, .hp-team-card, .hp-skill-card, .hp-issue-card, .hp-cta-btn, .hp-btn {
+      transition: none !important;
+    }
+  }
 </style>
