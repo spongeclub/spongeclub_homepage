@@ -109,10 +109,6 @@ const year = new Date().getFullYear();
             스폰지처럼 AI를 빨아들여 나만의 제품으로<br />
             <span class="hp-hero-lede-em">AI 빌더 커뮤니티 · 스폰지클럽</span>
           </p>
-          <div class="hp-hero-cta">
-            <a class="hp-btn hp-btn-dark" href="#this-issue">이번 호 보기 →</a>
-            <a class="hp-btn hp-btn-ghost" href="#archive">지난 호</a>
-          </div>
         </div>
 
         <div class="hp-hero-village">
@@ -449,19 +445,21 @@ const year = new Date().getFullYear();
   }
   .hp-hero-lede {
     font-size: clamp(15px, 1.7vw, 19px);
-    font-weight: 500;
+    font-weight: 600;
     line-height: 1.6;
     color: var(--sc-text-primary);
-    background: rgba(255, 251, 237, 0.94);
-    padding: 12px 18px;
-    border-radius: 12px;
-    backdrop-filter: blur(2px);
-    box-shadow: 0 6px 18px rgba(26, 31, 54, 0.10);
+    text-shadow:
+      0 0 6px rgba(255, 251, 237, 0.95),
+      0 0 14px rgba(255, 251, 237, 0.85),
+      0 2px 6px rgba(255, 251, 237, 0.7);
+    padding: 0;
+    background: none;
+    box-shadow: none;
   }
   .hp-hero-lede-em {
     display: inline-block;
     margin-top: 2px;
-    font-weight: 700;
+    font-weight: 800;
     color: var(--sc-text-primary);
   }
   .hp-hero-cta {
