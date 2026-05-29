@@ -7,11 +7,13 @@ export type Team = { name: string; href?: string };
 interface Props {
   teams: Team[];
   gifSrc?: string;
+  interactive?: boolean;
 }
 
 const {
   teams,
   gifSrc = '/assets/side-walking-sponges.gif',
+  interactive = true,
 } = Astro.props;
 
 // 1440x480 GIF 기준 % 좌표
@@ -31,9 +33,9 @@ const items = HOTSPOTS.map((spot, idx) => {
 });
 ---
 
-<section class="sv-village" aria-label="스폰지 마을 — 6조 이동 지도">
+<section class="sv-village" aria-label="스폰지 마을">
   <img class="sv-village-gif" src={gifSrc} alt="" loading="eager" decoding="async" />
-  {items.map((it) => (
+  {interactive && items.map((it) => (
     it.href ? (
       <a
         class="sv-hotspot"
