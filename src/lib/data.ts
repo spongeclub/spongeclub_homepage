@@ -36,6 +36,8 @@ export type Submission = {
   summary?: string;
   mvp?: boolean;
   mvpReason?: string;
+  mvpSummary?: string;
+  mvpContent?: string;
 };
 
 export type WeekData = {
@@ -110,7 +112,14 @@ function parseFrontmatter(text: string): Record<string, string> {
   const out: Record<string, string> = {};
   for (const line of m[1].split('\n')) {
     const kv = line.match(/^(\w+):\s*(.*)$/);
-    if (kv) out[kv[1]] = kv[2].trim();
+    if (kv) {
+      let v = kv[2].trim();
+      // strip outer matching quotes for friendlier YAML 입력
+      if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) {
+        v = v.slice(1, -1);
+      }
+      out[kv[1]] = v;
+    }
   }
   return out;
 }
@@ -248,6 +257,8 @@ function buildWeekFromFolder(folderName: string, members: Member[]): WeekData {
       noteTitle: extractFirstHeading(text) ?? path.basename(filePath, '.md'),
       mvp: fm.mvp === 'true',
       mvpReason: fm.mvp_reason,
+      mvpSummary: fm.mvp_summary,
+      mvpContent: fm.mvp_content,
     };
   });
 

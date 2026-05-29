@@ -48,14 +48,14 @@ const pastIssues = [...weeks].reverse().map((w) => {
 // 신규 등록 스킬 TOP 3 (skill md `created` 기준 최신)
 const latestSkills = getLatestSkills(loadCuratedSkills(), 3);
 
-// 이번 주 MVP — submit.md frontmatter `mvp: true` 기준
+// 이번 주 MVP — submit.md frontmatter `mvp: true` + 실제 제출(submitted: true) 기준
 const teamOrder = ['1조', '2조', '3조', '4조', '5조', '6조'];
 const mvpSubmissions = latest
-  ? latest.submissions.filter((s) => s.mvp && s.filePath)
+  ? latest.submissions.filter((s) => s.mvp && s.filePath && s.status === 'submitted')
   : [];
 const weeklyMvps = teamOrder.map((team) => {
   const sub = mvpSubmissions.find((s) => s.member.team === team);
-  if (!sub || !latest) return { team, nickname: '미정', title: '이번 주 미정', excerpt: '', reason: '', url: '#' };
+  if (!sub || !latest) return { team, nickname: '미정', title: '이번 주 미정', excerpt: '', reason: '', summary: '', content: '', url: '#' };
   const art = buildArticle(sub, latest.weekNumber);
   return {
     team,
@@ -63,6 +63,8 @@ const weeklyMvps = teamOrder.map((team) => {
     title: art ? cardTitle(art) : (sub.noteTitle || ''),
     excerpt: art ? (art.excerpt || '').slice(0, 90) : '',
     reason: sub.mvpReason || '',
+    summary: sub.mvpSummary || '',
+    content: sub.mvpContent || '',
     url: art?.url || '#',
   };
 });
@@ -168,8 +170,9 @@ const year = new Date().getFullYear();
               <a class="hp-mvp-card" href={m.url}>
                 <span class="hp-mvp-team">{m.team}</span>
                 <span class="hp-mvp-name">{m.nickname}</span>
-                <p class="hp-mvp-title">{m.title}</p>
-                {m.reason && <p class="hp-mvp-reason">★ {m.reason}</p>}
+                <p class="hp-mvp-tagline">{m.summary || m.title}</p>
+                {m.content && <p class="hp-mvp-content">{m.content}</p>}
+                {!m.content && m.reason && <p class="hp-mvp-reason">★ {m.reason}</p>}
               </a>
             ))}
           </div>
@@ -619,6 +622,20 @@ const year = new Date().getFullYear();
     font-weight: 600;
     line-height: 1.45;
     color: var(--sc-text-primary);
+  }
+  .hp-mvp-tagline {
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.45;
+    color: var(--sc-text-primary);
+    letter-spacing: -0.01em;
+    margin-top: 4px;
+  }
+  .hp-mvp-content {
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--sc-text-muted-high);
+    margin-top: 4px;
   }
   .hp-mvp-reason {
     font-size: 13px;
