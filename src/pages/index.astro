@@ -396,58 +396,75 @@ const year = new Date().getFullYear();
     .hp-nav a:nth-child(3) { display: none; }
   }
 
-  /* ─── HERO (잡지 표지) ─── */
+  /* ─── HERO (잡지 표지) — GIF 배경 + 텍스트 오버레이 ─── */
   .hp-hero {
-    display: flex; flex-direction: column;
-    gap: clamp(28px, 4vw, 48px);
-    padding-top: clamp(40px, 6vw, 72px);
-    padding-bottom: clamp(24px, 4vw, 48px);
-  }
-  .hp-hero-text {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 24px;
-    display: flex; flex-direction: column;
-    gap: 16px;
-    align-items: flex-start;
-  }
-  /* 비키니바텀 마을 GIF — 풀-블리드 hero */
-  .hp-hero-village {
+    position: relative;
+    isolation: isolate;
     width: 100%;
   }
-  .hp-hero-village .sv-village {
-    min-height: 320px;
+  .hp-hero-village {
+    width: 100%;
+    display: block;
   }
+  .hp-hero-village .sv-village {
+    aspect-ratio: 1440 / 460;
+    max-height: 64vh;
+  }
+  /* 텍스트는 GIF 위 좌상단 카드처럼 */
+  .hp-hero-text {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    max-width: 1200px;
+    margin-inline: auto;
+    padding: clamp(20px, 3.4vw, 44px);
+    display: flex; flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .hp-hero-text > * { pointer-events: auto; }
   .hp-hero-kicker {
     font-family: var(--sc-font-body);
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 700;
-    letter-spacing: 0.15em;
+    letter-spacing: 0.14em;
     color: var(--sc-text-primary);
-    background: var(--sc-surface-white);
-    padding: 8px 16px;
+    background: var(--sc-bg-signature);
+    padding: 6px 13px;
     border-radius: var(--sc-radius-pill);
-    align-self: flex-start;
+    box-shadow: 0 4px 14px rgba(26, 31, 54, 0.12);
   }
   .hp-hero-title {
     font-family: var(--sc-font-display);
     font-weight: 400;
-    font-size: clamp(52px, 9vw, 116px);
-    line-height: 1.04;
+    font-size: clamp(30px, 4.4vw, 56px);
+    line-height: 1.08;
     letter-spacing: -0.015em;
     color: var(--sc-text-primary);
-    max-width: 900px;
+    max-width: 600px;
+    background: var(--sc-bg-signature);
+    padding: 6px 14px;
+    border-radius: 12px;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+    box-shadow: 0 6px 18px rgba(26, 31, 54, 0.10);
   }
   .hp-hero-lede {
-    font-size: clamp(15px, 1.6vw, 19px);
+    font-size: clamp(12px, 1.2vw, 14.5px);
     font-weight: 500;
-    line-height: 1.7;
-    color: var(--sc-text-muted-high);
-    max-width: 640px;
+    line-height: 1.55;
+    color: var(--sc-text-primary);
+    max-width: 460px;
+    background: rgba(255, 251, 237, 0.92);
+    padding: 8px 12px;
+    border-radius: 10px;
+    backdrop-filter: blur(2px);
+    box-shadow: 0 4px 14px rgba(26, 31, 54, 0.08);
   }
   .hp-hero-cta {
-    margin-top: 12px;
-    display: flex; gap: 12px; flex-wrap: wrap;
+    margin-top: 6px;
+    display: flex; gap: 10px; flex-wrap: wrap;
   }
   .hp-btn {
     padding: 13px 24px;
