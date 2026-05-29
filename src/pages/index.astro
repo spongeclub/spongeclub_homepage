@@ -105,9 +105,12 @@ const year = new Date().getFullYear();
       <section class="hp-hero">
         <div class="hp-hero-text">
           {latest && <span class="hp-hero-kicker">{weekLabel(latest.weekNumber)} · {year}</span>}
-          <h1 class="hp-hero-title">흡수하고, 짜내고, 만든다</h1>
+          <h1 class="hp-hero-title">
+            흡수하고,<br />짜내고,<br />만든다
+          </h1>
           <p class="hp-hero-lede">
-            스폰지처럼 AI를 빨아들여 나만의 제품으로 <span class="hp-hero-lede-em">— AI 빌더 커뮤니티 스폰지클럽</span>
+            스폰지처럼 AI를 빨아들여 나만의 제품으로<br />
+            <span class="hp-hero-lede-em">AI 빌더 커뮤니티 · 스폰지클럽</span>
           </p>
           <div class="hp-hero-cta">
             <a class="hp-btn hp-btn-dark" href="#this-issue">이번 호 보기 →</a>
@@ -403,7 +406,7 @@ const year = new Date().getFullYear();
     aspect-ratio: 1440 / 460;
     max-height: 64vh;
   }
-  /* 텍스트는 GIF 위 좌상단 카드처럼 */
+  /* 텍스트는 GIF 위 가운데 정렬 오버레이 */
   .hp-hero-text {
     position: absolute;
     inset: 0;
@@ -413,8 +416,10 @@ const year = new Date().getFullYear();
     margin-inline: auto;
     padding: clamp(20px, 3.4vw, 44px);
     display: flex; flex-direction: column;
-    gap: 12px;
-    align-items: flex-start;
+    gap: 14px;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
   }
   .hp-hero-text > * { pointer-events: auto; }
   .hp-hero-kicker {
@@ -431,29 +436,34 @@ const year = new Date().getFullYear();
   .hp-hero-title {
     font-family: var(--sc-font-display);
     font-weight: 400;
-    font-size: clamp(30px, 4.4vw, 56px);
-    line-height: 1.08;
+    font-size: clamp(40px, 6.4vw, 88px);
+    line-height: 1.0;
     letter-spacing: -0.015em;
     color: var(--sc-text-primary);
-    max-width: 600px;
     background: var(--sc-bg-signature);
-    padding: 6px 14px;
-    border-radius: 12px;
+    padding: 8px 20px;
+    border-radius: 14px;
     box-decoration-break: clone;
     -webkit-box-decoration-break: clone;
-    box-shadow: 0 6px 18px rgba(26, 31, 54, 0.10);
+    box-shadow: 0 8px 22px rgba(26, 31, 54, 0.12);
+    display: inline-block;
   }
   .hp-hero-lede {
-    font-size: clamp(12px, 1.2vw, 14.5px);
+    font-size: clamp(15px, 1.7vw, 19px);
     font-weight: 500;
-    line-height: 1.55;
+    line-height: 1.6;
     color: var(--sc-text-primary);
-    max-width: 460px;
-    background: rgba(255, 251, 237, 0.92);
-    padding: 8px 12px;
-    border-radius: 10px;
+    background: rgba(255, 251, 237, 0.94);
+    padding: 12px 18px;
+    border-radius: 12px;
     backdrop-filter: blur(2px);
-    box-shadow: 0 4px 14px rgba(26, 31, 54, 0.08);
+    box-shadow: 0 6px 18px rgba(26, 31, 54, 0.10);
+  }
+  .hp-hero-lede-em {
+    display: inline-block;
+    margin-top: 2px;
+    font-weight: 700;
+    color: var(--sc-text-primary);
   }
   .hp-hero-cta {
     margin-top: 6px;
@@ -466,17 +476,17 @@ const year = new Date().getFullYear();
     font-size: 14px;
     transition: filter 160ms, transform 160ms, background 160ms;
   }
-  .hp-btn-dark {
+  .hp-btn.hp-btn-dark {
     background: var(--sc-surface-dark);
     color: var(--sc-text-on-dark);
   }
-  .hp-btn-dark:hover { transform: translateY(-1px); filter: brightness(1.06); }
-  .hp-btn-ghost {
+  .hp-btn.hp-btn-dark:hover { transform: translateY(-1px); filter: brightness(1.06); }
+  .hp-btn.hp-btn-ghost {
     background: transparent;
     color: var(--sc-text-primary);
     border: 1.5px solid var(--sc-text-primary);
   }
-  .hp-btn-ghost:hover { background: var(--sc-text-primary); color: var(--sc-bg-signature); }
+  .hp-btn.hp-btn-ghost:hover { background: var(--sc-text-primary); color: var(--sc-bg-signature); }
 
   /* ─── STATS 옐로우 띠 (시그니처 옐로우 사용처 1) ─── */
   .hp-stats {
