@@ -1,6 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import SpongeVillage from '../components/SpongeVillage.astro';
+import SpongeVillageGif from '../components/SpongeVillageGif.astro';
 import {
   buildAllWeeks,
   buildWeekArticles,
@@ -51,24 +51,11 @@ const weeklyMvps = teamOrder.map((team) => {
   };
 });
 
-// 조별 시즌 최고 달성률(peak) — SpongeVillage hero 용
-// 현재 주는 아직 진행 중이라 0%가 많으니, 시즌 전체에서 가장 높았던 주차 달성률을 보여줌
-const villageTeams = teamOrder.map((team) => {
-  if (!latest) return { name: team };
-  let peakRate = 0;
-  for (const w of weeks) {
-    const subs = w.submissions.filter((s) => s.member.team === team);
-    const submitted = subs.filter((s) => s.status === 'submitted').length;
-    const total = subs.length;
-    const rate = total > 0 ? Math.round((submitted / total) * 100) : 0;
-    if (rate > peakRate) peakRate = rate;
-  }
-  return {
-    name: team,
-    weeklyAchievementRate: peakRate,
-    href: `/issue/${latest.weekNumber}/`,
-  };
-});
+// 조별 마을 hotspot — 6조 각자의 이번 호 페이지로 이동
+const villageTeams = teamOrder.map((team) => ({
+  name: team,
+  href: latest ? `/issue/${latest.weekNumber}/` : '#',
+}));
 
 // 조별 분석 카드 — 90_analysis/teams/Week_0N_조M.md 에서 로드
 const teamAnalyses = latest ? loadTeamAnalyses(latest.weekNumber) : [];
@@ -136,7 +123,7 @@ const year = new Date().getFullYear();
         </div>
 
         <div class="hp-hero-village">
-          <SpongeVillage teams={villageTeams} />
+          <SpongeVillageGif teams={villageTeams} />
         </div>
       </section>
 
@@ -424,17 +411,12 @@ const year = new Date().getFullYear();
     gap: 16px;
     align-items: flex-start;
   }
-  /* 비키니바텀 마을 — 화면 풀-블리드로 배경처럼 */
+  /* 비키니바텀 마을 GIF — 풀-블리드 hero */
   .hp-hero-village {
     width: 100%;
   }
-  .hp-hero-village .bb-scene {
-    border-radius: 0;
-    aspect-ratio: 2172 / 600;
+  .hp-hero-village .sv-village {
     min-height: 320px;
-  }
-  @media (min-width: 1400px) {
-    .hp-hero-village .bb-scene { aspect-ratio: 2172 / 560; }
   }
   .hp-hero-kicker {
     font-family: var(--sc-font-body);
