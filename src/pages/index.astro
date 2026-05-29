@@ -51,11 +51,8 @@ const weeklyMvps = teamOrder.map((team) => {
   };
 });
 
-// 조별 마을 hotspot — 6조 각자의 이번 호 페이지로 이동
-const villageTeams = teamOrder.map((team) => ({
-  name: team,
-  href: latest ? `/issue/${latest.weekNumber}/` : '#',
-}));
+// 조별 마을 hotspot — 메인 hero에서는 이동 비활성 (이름만 표시)
+const villageTeams = teamOrder.map((team) => ({ name: team }));
 
 // 조별 분석 카드 — 90_analysis/teams/Week_0N_조M.md 에서 로드
 const teamAnalyses = latest ? loadTeamAnalyses(latest.weekNumber) : [];
@@ -108,10 +105,7 @@ const year = new Date().getFullYear();
       <section class="hp-hero">
         <div class="hp-hero-text">
           {latest && <span class="hp-hero-kicker">{weekLabel(latest.weekNumber)} · {year}</span>}
-          <h1 class="hp-hero-title">
-            매주 만들고,<br />
-            <span class="hp-highlight">각자</span> 나눈다.
-          </h1>
+          <h1 class="hp-hero-title">스폰지클럽</h1>
           <p class="hp-hero-lede">
             {totalMembers}명이 매주 무언가를 만들고, 그 과정을 기록하는 AI 빌더 커뮤니티.<br />
             아래는 이번 호 <b>{latest && weekLabel(latest.weekNumber)}</b> 6개 조의 진척도.
