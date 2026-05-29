@@ -1,0 +1,168 @@
+---
+// 스폰지 마을 GIF — 비키니바텀 마을 walking 장면 위에 6개 조 핫스팟 오버레이
+// 원본: 06_unit/데굴데굴/sponge-village2/gif-click-hover-demo.html
+
+export type Team = { name: string; href?: string };
+
+interface Props {
+  teams: Team[];
+  gifSrc?: string;
+}
+
+const {
+  teams,
+  gifSrc = '/assets/side-walking-sponges.gif',
+} = Astro.props;
+
+// 1440x480 GIF 기준 % 좌표
+const HOTSPOTS = [
+  { x: '5.35%',  y: '18.6%', w: '12.45%', h: '62.8%', accent: '#5fd5e2' },
+  { x: '24.55%', y: '18.7%', w: '12%',    h: '62.8%', accent: '#f0a4cc' },
+  { x: '38.7%',  y: '18.3%', w: '12.05%', h: '63.2%', accent: '#f6ce55' },
+  { x: '52.95%', y: '18.8%', w: '12%',    h: '62.7%', accent: '#ef7d79' },
+  { x: '67.2%',  y: '18.6%', w: '12.05%', h: '62.9%', accent: '#63d59a' },
+  { x: '82.35%', y: '18.3%', w: '12.15%', h: '63.2%', accent: '#bda2ef' },
+];
+
+const DEFAULT_NAMES = ['1조', '2조', '3조', '4조', '5조', '6조'];
+const items = HOTSPOTS.map((spot, idx) => {
+  const team = teams[idx] ?? { name: DEFAULT_NAMES[idx] };
+  return { ...spot, name: team.name, href: team.href };
+});
+---
+
+<section class="sv-village" aria-label="스폰지 마을 — 6조 이동 지도">
+  <img class="sv-village-gif" src={gifSrc} alt="" loading="eager" decoding="async" />
+  {items.map((it) => (
+    it.href ? (
+      <a
+        class="sv-hotspot"
+        style={`--x:${it.x};--y:${it.y};--w:${it.w};--h:${it.h};--accent:${it.accent}`}
+        href={it.href}
+        aria-label={`${it.name} 페이지로 이동`}
+      >
+        <span class="sv-hotspot-tag">{it.name} 보기</span>
+      </a>
+    ) : (
+      <span
+        class="sv-hotspot sv-hotspot--inert"
+        style={`--x:${it.x};--y:${it.y};--w:${it.w};--h:${it.h};--accent:${it.accent}`}
+        aria-label={`${it.name}`}
+        tabindex="0"
+      >
+        <span class="sv-hotspot-tag">{it.name}</span>
+      </span>
+    )
+  ))}
+</section>
+
+<style is:global>
+  .sv-village {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1440 / 480;
+    overflow: hidden;
+    background: #54c8d4;
+  }
+  .sv-village-gif {
+    position: absolute;
+    inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    user-select: none;
+    pointer-events: none;
+  }
+  .sv-hotspot {
+    --accent: #ffe36d;
+    position: absolute;
+    left: var(--x);
+    top: var(--y);
+    width: var(--w);
+    height: var(--h);
+    display: block;
+    color: inherit;
+    text-decoration: none;
+    border-radius: 46% 46% 38% 38% / 25% 25% 18% 18%;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .sv-hotspot::before,
+  .sv-hotspot::after {
+    content: "";
+    position: absolute;
+    inset: -1.5% -1.5% -1%;
+    border-radius: inherit;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .18s ease, transform .18s ease, filter .18s ease;
+  }
+  .sv-hotspot::before {
+    background:
+      radial-gradient(ellipse at 50% 44%, rgba(255, 255, 255, .34), transparent 47%),
+      linear-gradient(180deg, rgba(255, 255, 255, .08), rgba(255, 255, 255, 0));
+    box-shadow:
+      0 0 0 2px color-mix(in srgb, var(--accent), white 34%),
+      0 0 18px color-mix(in srgb, var(--accent), transparent 18%),
+      0 14px 24px rgba(18, 92, 102, .14);
+    transform: scale(.992);
+  }
+  .sv-hotspot::after {
+    inset: auto 18% -9%;
+    height: 16%;
+    border-radius: 50%;
+    background: radial-gradient(ellipse, rgba(27, 104, 112, .2), transparent 68%);
+    filter: blur(2px);
+  }
+  .sv-hotspot:hover::before,
+  .sv-hotspot:hover::after,
+  .sv-hotspot:focus-visible::before,
+  .sv-hotspot:focus-visible::after {
+    opacity: 1;
+    transform: scale(1.01);
+  }
+  .sv-hotspot:hover,
+  .sv-hotspot:focus-visible {
+    z-index: 3;
+  }
+  .sv-hotspot--inert { cursor: default; }
+
+  .sv-hotspot-tag {
+    position: absolute;
+    left: 50%;
+    bottom: -28px;
+    z-index: 4;
+    min-width: 58px;
+    padding: 6px 9px;
+    border: 1px solid rgba(255, 255, 255, .64);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .88);
+    box-shadow: 0 8px 20px rgba(26, 91, 99, .14);
+    color: #173d43;
+    font-size: 12px;
+    font-weight: 800;
+    text-align: center;
+    transform: translate(-50%, 6px);
+    opacity: 0;
+    transition: opacity .18s ease, transform .18s ease;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+  .sv-hotspot:hover .sv-hotspot-tag,
+  .sv-hotspot:focus-visible .sv-hotspot-tag {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+  @media (max-width: 720px) {
+    .sv-hotspot-tag { display: none; }
+    .sv-hotspot::before {
+      box-shadow:
+        0 0 0 2px color-mix(in srgb, var(--accent), white 36%),
+        0 0 16px color-mix(in srgb, var(--accent), transparent 10%);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .sv-hotspot::before, .sv-hotspot::after, .sv-hotspot-tag {
+      transition: none;
+    }
+  }
+</style>
