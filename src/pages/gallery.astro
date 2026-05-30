@@ -39,7 +39,7 @@ const catEntries = Object.entries(catCounts).sort((a, b) => b[1] - a[1]);
       </h1>
       <p class="sc-lede">
         멤버들이 직접 만들고 배포한 <span class="sc-highlight">{items.length}개 산출물</span>.
-        배포 사이트부터 자동화 파이프라인까지 실제 동작하는 프로덕트들입니다.
+        클릭하면 OS 선언문·기술 스택·핵심 기능까지 자세히 볼 수 있어요.
       </p>
     </section>
 
@@ -77,8 +77,16 @@ const catEntries = Object.entries(catCounts).sort((a, b) => b[1] - a[1]);
 
     <!-- 그리드 -->
     <div class="gl-grid">
-      {items.map(item => (
-        <article class="gl-card" data-cat={item.category}>
+      {items.map((item, idx) => (
+        <article
+          class="gl-card"
+          data-cat={item.category}
+          data-idx={idx}
+          role="button"
+          tabindex="0"
+          aria-haspopup="dialog"
+          aria-label={`${item.title} 상세 보기`}
+        >
           <header class="gl-card-head">
             <span class="gl-card-cat">{item.category}</span>
             <span class="gl-card-week">{item.week}주차</span>
@@ -87,13 +95,7 @@ const catEntries = Object.entries(catCounts).sort((a, b) => b[1] - a[1]);
           <p class="gl-card-desc">{item.description}</p>
           <footer class="gl-card-foot">
             <span class="gl-card-by"><b>{item.member}</b> · {item.team}</span>
-            {item.url ? (
-              <a href={item.url} target="_blank" rel="noopener noreferrer" class="gl-card-link">
-                결과물 보기 ↗
-              </a>
-            ) : (
-              <span class="gl-card-no-url">로컬 운영</span>
-            )}
+            <span class="gl-card-more">자세히 →</span>
           </footer>
         </article>
       ))}
@@ -102,13 +104,37 @@ const catEntries = Object.entries(catCounts).sort((a, b) => b[1] - a[1]);
     <a href="/" class="sc-back">← 홈으로</a>
   </main>
 
+  <!-- ─── MODAL ─── -->
+  <div class="gl-modal-overlay" id="glModal" role="dialog" aria-modal="true" aria-labelledby="glModalTitle" hidden>
+    <div class="gl-modal">
+      <button class="gl-modal-close" id="glModalClose" aria-label="닫기">×</button>
+      <div class="gl-modal-body">
+        <div class="gl-modal-chips" id="glModalChips"></div>
+        <h2 class="gl-modal-title" id="glModalTitle"></h2>
+        <p class="gl-modal-by" id="glModalBy"></p>
+        <blockquote class="gl-modal-highlight" id="glModalHighlight" hidden></blockquote>
+        <p class="gl-modal-desc" id="glModalDesc"></p>
+        <section class="gl-modal-section" id="glModalTechSec" hidden>
+          <h3 class="gl-modal-h">Tech Stack</h3>
+          <div class="gl-modal-tech" id="glModalTech"></div>
+        </section>
+        <section class="gl-modal-section" id="glModalFeatSec" hidden>
+          <h3 class="gl-modal-h">Key Features</h3>
+          <ul class="gl-modal-feat" id="glModalFeat"></ul>
+        </section>
+        <div class="gl-modal-cta" id="glModalCta"></div>
+      </div>
+    </div>
+  </div>
+
   <footer class="sc-footer">
     스폰지클럽 · 큐레이션 {items.length}개
   </footer>
 </Layout>
 
-<script is:inline>
+<script is:inline define:vars={{ itemsData: items }}>
   (function () {
+    // 카테고리 탭
     const tabs = document.querySelectorAll('.gl-tab');
     const cards = document.querySelectorAll('.gl-card');
     tabs.forEach(tab => {
@@ -122,6 +148,76 @@ const catEntries = Object.entries(catCounts).sort((a, b) => b[1] - a[1]);
         });
       });
     });
+
+    // 모달
+    const modal = document.getElementById('glModal');
+    const closeBtn = document.getElementById('glModalClose');
+    const titleEl = document.getElementById('glModalTitle');
+    const byEl = document.getElementById('glModalBy');
+    const chipsEl = document.getElementById('glModalChips');
+    const highlightEl = document.getElementById('glModalHighlight');
+    const descEl = document.getElementById('glModalDesc');
+    const techSec = document.getElementById('glModalTechSec');
+    const techEl = document.getElementById('glModalTech');
+    const featSec = document.getElementById('glModalFeatSec');
+    const featEl = document.getElementById('glModalFeat');
+    const ctaEl = document.getElementById('glModalCta');
+
+    function openModal(idx) {
+      const it = itemsData[idx];
+      if (!it) return;
+      titleEl.textContent = it.title;
+      byEl.innerHTML = `<b>${it.member}</b> · ${it.team}`;
+      chipsEl.innerHTML =
+        `<span class="gl-modal-chip gl-modal-chip--cat">${it.category}</span>` +
+        `<span class="gl-modal-chip">${it.week}주차</span>`;
+      if (it.highlight) {
+        highlightEl.textContent = it.highlight;
+        highlightEl.hidden = false;
+      } else {
+        highlightEl.hidden = true;
+      }
+      descEl.textContent = it.description;
+      if (Array.isArray(it.techStack) && it.techStack.length) {
+        techEl.innerHTML = it.techStack.map(t => `<span class="gl-modal-tech-tag">${t}</span>`).join('');
+        techSec.hidden = false;
+      } else {
+        techSec.hidden = true;
+      }
+      if (Array.isArray(it.features) && it.features.length) {
+        featEl.innerHTML = it.features.map(f => `<li>${f}</li>`).join('');
+        featSec.hidden = false;
+      } else {
+        featSec.hidden = true;
+      }
+      ctaEl.innerHTML = it.url
+        ? `<a class="gl-modal-cta-btn" href="${it.url}" target="_blank" rel="noopener noreferrer">사이트 방문 ↗</a>`
+        : `<span class="gl-modal-no-url">로컬 운영 · 외부 링크 없음</span>`;
+
+      modal.hidden = false;
+      document.body.style.overflow = 'hidden';
+      closeBtn.focus();
+    }
+
+    function closeModal() {
+      modal.hidden = true;
+      document.body.style.overflow = '';
+    }
+
+    cards.forEach(card => {
+      const idx = Number(card.getAttribute('data-idx'));
+      card.addEventListener('click', () => openModal(idx));
+      card.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          openModal(idx);
+        }
+      });
+    });
+
+    closeBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !modal.hidden) closeModal(); });
   })();
 </script>
 
@@ -205,8 +301,11 @@ const catEntries = Object.entries(catCounts).sort((a, b) => b[1] - a[1]);
     padding: 20px 22px 18px;
     display: flex; flex-direction: column; gap: 12px;
     transition: transform 160ms, box-shadow 160ms, border-color 160ms;
+    cursor: pointer;
+    outline: none;
   }
   .gl-card:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(26, 31, 54, 0.07); border-color: var(--sc-accent-yellow); }
+  .gl-card:focus-visible { box-shadow: 0 0 0 3px rgba(23, 86, 232, 0.20); border-color: var(--sc-accent-blue); }
   .gl-card-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
   .gl-card-cat {
     font-size: 11px;
@@ -229,7 +328,16 @@ const catEntries = Object.entries(catCounts).sort((a, b) => b[1] - a[1]);
     line-height: 1.2;
     color: var(--sc-text-primary);
   }
-  .gl-card-desc { font-size: 13.5px; line-height: 1.65; color: var(--sc-text-muted-high); flex: 1; }
+  .gl-card-desc {
+    font-size: 13.5px;
+    line-height: 1.65;
+    color: var(--sc-text-muted-high);
+    flex: 1;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
   .gl-card-foot {
     display: flex; justify-content: space-between; align-items: center;
     gap: 12px;
@@ -238,16 +346,186 @@ const catEntries = Object.entries(catCounts).sort((a, b) => b[1] - a[1]);
   }
   .gl-card-by { font-size: 11px; color: var(--sc-text-muted-mid); font-weight: 500; }
   .gl-card-by b { color: var(--sc-text-primary); font-weight: 700; }
-  .gl-card-link {
+  .gl-card-more {
     font-size: 11px;
     font-weight: 700;
-    padding: 5px 11px;
-    border-radius: var(--sc-radius-pill);
-    background: var(--sc-bg-signature);
-    color: var(--sc-text-primary);
-    white-space: nowrap;
-    transition: filter 140ms;
+    color: var(--sc-accent-blue);
+    letter-spacing: 0.04em;
   }
-  .gl-card-link:hover { filter: brightness(0.96); }
-  .gl-card-no-url { font-size: 11px; color: var(--sc-text-muted-low); font-weight: 600; }
+
+  /* ─── MODAL ─── */
+  .gl-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: rgba(26, 31, 54, 0.55);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    animation: glOverlayIn 200ms ease-out;
+  }
+  @keyframes glOverlayIn { from { opacity: 0; } to { opacity: 1; } }
+
+  .gl-modal {
+    position: relative;
+    background: var(--sc-surface-white);
+    border-radius: var(--sc-radius-card);
+    width: 100%;
+    max-width: 640px;
+    max-height: 88vh;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(26, 31, 54, 0.30);
+    display: flex; flex-direction: column;
+    animation: glModalIn 240ms cubic-bezier(.2,.9,.3,1.2);
+  }
+  @keyframes glModalIn {
+    from { transform: translateY(20px) scale(.96); opacity: 0; }
+    to   { transform: translateY(0) scale(1); opacity: 1; }
+  }
+
+  .gl-modal-close {
+    position: absolute;
+    top: 12px; right: 12px;
+    width: 34px; height: 34px;
+    border-radius: var(--sc-radius-pill);
+    background: rgba(26, 31, 54, 0.06);
+    color: var(--sc-text-primary);
+    font-size: 22px;
+    line-height: 1;
+    display: inline-flex; align-items: center; justify-content: center;
+    transition: background 140ms;
+    z-index: 1;
+  }
+  .gl-modal-close:hover { background: rgba(26, 31, 54, 0.12); }
+
+  .gl-modal-body {
+    padding: 32px clamp(20px, 4vw, 36px);
+    overflow-y: auto;
+    display: flex; flex-direction: column; gap: 14px;
+  }
+
+  .gl-modal-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .gl-modal-chip {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 6px;
+    background: rgba(26, 31, 54, 0.08);
+    color: var(--sc-text-muted-high);
+    letter-spacing: 0.02em;
+  }
+  .gl-modal-chip--cat {
+    background: rgba(23, 86, 232, 0.10);
+    color: var(--sc-accent-blue);
+  }
+
+  .gl-modal-title {
+    font-family: var(--sc-font-display);
+    font-weight: 400;
+    font-size: clamp(26px, 4vw, 36px);
+    line-height: 1.15;
+    color: var(--sc-text-primary);
+    letter-spacing: -0.015em;
+  }
+  .gl-modal-by {
+    font-size: 13px;
+    color: var(--sc-text-muted-mid);
+    font-weight: 500;
+  }
+  .gl-modal-by b { color: var(--sc-text-primary); font-weight: 700; }
+
+  .gl-modal-highlight {
+    margin: 0;
+    padding: 14px 18px;
+    background: var(--sc-bg-signature);
+    border-left: 4px solid var(--sc-accent-red);
+    border-radius: 0 var(--sc-radius-small) var(--sc-radius-small) 0;
+    font-family: var(--sc-font-body);
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.55;
+    color: var(--sc-text-primary);
+  }
+  .gl-modal-desc {
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--sc-text-muted-high);
+    font-weight: 500;
+  }
+
+  .gl-modal-section {
+    margin-top: 6px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .gl-modal-h {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--sc-text-muted-mid);
+    margin: 0;
+  }
+  .gl-modal-tech { display: flex; flex-wrap: wrap; gap: 6px; }
+  .gl-modal-tech-tag {
+    font-size: 11.5px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: var(--sc-radius-pill);
+    background: var(--sc-bg-base);
+    border: 1px solid var(--sc-border-card);
+    color: var(--sc-text-primary);
+  }
+  .gl-modal-feat {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .gl-modal-feat li {
+    position: relative;
+    padding-left: 22px;
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--sc-text-primary);
+  }
+  .gl-modal-feat li::before {
+    content: "→";
+    position: absolute;
+    left: 0; top: 0;
+    color: var(--sc-accent-red);
+    font-weight: 700;
+  }
+
+  .gl-modal-cta {
+    margin-top: 12px;
+    padding-top: 18px;
+    border-top: 1px solid var(--sc-border-soft);
+    display: flex; justify-content: center;
+  }
+  .gl-modal-cta-btn {
+    padding: 12px 22px;
+    border-radius: var(--sc-radius-pill);
+    background: var(--sc-surface-dark);
+    color: var(--sc-text-on-dark);
+    font-weight: 700;
+    font-size: 14px;
+    transition: filter 160ms, transform 160ms;
+  }
+  .gl-modal-cta-btn:hover { filter: brightness(1.08); transform: translateY(-1px); }
+  .gl-modal-no-url {
+    font-size: 13px;
+    color: var(--sc-text-muted-mid);
+    font-weight: 500;
+  }
+
+  @media (max-width: 640px) {
+    .gl-modal-overlay { padding: 0; }
+    .gl-modal { max-width: 100%; max-height: 100vh; border-radius: 0; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .gl-modal-overlay, .gl-modal { animation: none; }
+  }
 </style>

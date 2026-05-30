@@ -9,6 +9,10 @@ export type GalleryItem = {
   description: string;
   url: string;
   notePath: string;
+  thumbnail?: string;
+  highlight?: string;
+  techStack?: string[];
+  features?: string[];
 };
 
 export function loadGallery(): { curatedAt: string; items: GalleryItem[] } {
