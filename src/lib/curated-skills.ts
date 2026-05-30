@@ -22,11 +22,14 @@ export type CuratedSkill = {
   inspiredBy: string;
   keywords: string[];
   links: string[];
+  githubUrl?: string;  // links 중 github.com 도메인
+  slackUrl?: string;   // links 중 slack.com 도메인
   featured: boolean;
   bodyHtml: string;
+  mainHtml: string;    // "## 주요 내용" 섹션만 마크다운→HTML 변환
   quotes: CuratedQuote[];
-  userCount: number;   // 🔥 N명이 써봄 — authors 길이 또는 inspired_by의 "N명"
-  created: string;     // frontmatter `created` (YYYY-MM-DD), 신규 정렬용
+  userCount: number;
+  created: string;
 };
 
 // ───────────────────────────────────────────────
@@ -100,10 +103,17 @@ export function loadCuratedSkills(): CuratedSkill[] {
 
     const slug = file.replace(/\.md$/, '');
     const bodyHtml = marked.parse(body || '', { async: false }) as string;
+    const mainSection = extractMainSection(body || '');
+    const mainHtml = mainSection
+      ? (marked.parse(mainSection, { async: false }) as string)
+      : '';
     const quotes = extractQuotes(body || '');
     const authors = toArr(fm.author);
     const inspiredBy = toStr(fm.inspired_by);
     const userCount = computeUserCount(authors, inspiredBy);
+    const links = toArr(fm.links);
+    const githubUrl = links.find((u) => /github\.com/i.test(u));
+    const slackUrl = links.find((u) => /slack\.com/i.test(u));
 
     skills.push({
       slug,
@@ -118,9 +128,12 @@ export function loadCuratedSkills(): CuratedSkill[] {
       difficulty: toStr(fm.difficulty),
       inspiredBy,
       keywords: toArr(fm.keywords),
-      links: toArr(fm.links),
+      links,
+      githubUrl,
+      slackUrl,
       featured: fm.featured === true || fm.featured === 'true',
       bodyHtml,
+      mainHtml,
       quotes,
       userCount,
       created: toStr(fm.created),
@@ -135,6 +148,25 @@ export function getLatestSkills(skills: CuratedSkill[], n: number = 3): CuratedS
   return [...skills]
     .sort((a, b) => (b.created || '').localeCompare(a.created || ''))
     .slice(0, n);
+}
+
+// "## 주요 내용" 섹션 본문만 추출 (다음 ## 또는 EOF 전까지)
+function extractMainSection(body: string): string {
+  const lines = body.split(/\r?\n/);
+  let inSection = false;
+  const collected: string[] = [];
+  for (const line of lines) {
+    const headMatch = line.match(/^##\s+(.+?)\s*$/);
+    if (headMatch) {
+      if (inSection) break;
+      if (headMatch[1].trim() === '주요 내용') {
+        inSection = true;
+        continue;
+      }
+    }
+    if (inSection) collected.push(line);
+  }
+  return collected.join('\n').trim();
 }
 
 // 본문의 `> "내용" — 작성자` 패턴에서 인용 추출

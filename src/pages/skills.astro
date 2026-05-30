@@ -244,6 +244,13 @@ function searchHaystack(sk: CuratedSkill): string {
             </div>
 
             <div class="sk-card-detail">
+              {sk.mainHtml && (
+                <div class="sk-detail-block">
+                  <p class="sk-detail-label">📝 주요 내용</p>
+                  <div class="sk-detail-main" set:html={sk.mainHtml}></div>
+                </div>
+              )}
+
               {isReview && quotes.length > 0 && (
                 <div class="sk-detail-block">
                   <p class="sk-detail-label">💬 써본 사람들이 발견한 것</p>
@@ -273,10 +280,24 @@ function searchHaystack(sk: CuratedSkill): string {
                 </div>
               )}
 
-              {href && (
-                <a class="sk-detail-link" href={href} target="_blank" rel="noopener noreferrer">
-                  ↗ 원문 보기
-                </a>
+              {(sk.githubUrl || sk.slackUrl || href) && (
+                <div class="sk-detail-cta">
+                  {sk.githubUrl && (
+                    <a class="sk-detail-btn sk-detail-btn--dark" href={sk.githubUrl} target="_blank" rel="noopener noreferrer">
+                      GitHub에서 보기 ↗
+                    </a>
+                  )}
+                  {sk.slackUrl && (
+                    <a class="sk-detail-btn sk-detail-btn--outline" href={sk.slackUrl} target="_blank" rel="noopener noreferrer">
+                      슬랙 원본 보기 ↗
+                    </a>
+                  )}
+                  {!sk.githubUrl && !sk.slackUrl && href && (
+                    <a class="sk-detail-btn sk-detail-btn--outline" href={href} target="_blank" rel="noopener noreferrer">
+                      원문 보기 ↗
+                    </a>
+                  )}
+                </div>
               )}
             </div>
           </article>
@@ -902,16 +923,85 @@ function searchHaystack(sk: CuratedSkill): string {
     font-weight: 500;
   }
 
-  .sk-detail-link {
+  /* 주요 내용 — 마크다운 렌더 */
+  .sk-detail-main {
+    font-size: 13.5px;
+    line-height: 1.7;
+    color: var(--sc-text-primary);
+  }
+  .sk-detail-main p { margin: 0 0 8px; }
+  .sk-detail-main p:last-child { margin-bottom: 0; }
+  .sk-detail-main ul, .sk-detail-main ol {
+    margin: 4px 0 8px;
+    padding-left: 1.2rem;
+  }
+  .sk-detail-main ul { list-style: disc; }
+  .sk-detail-main ol { list-style: decimal; }
+  .sk-detail-main li { margin: 3px 0; }
+  .sk-detail-main code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    background: var(--sc-border-soft);
+    padding: 0.1rem 0.35rem;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+  .sk-detail-main pre {
+    background: var(--sc-surface-dark);
+    color: rgba(255, 251, 237, 0.94);
+    padding: 12px 14px;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-size: 12px;
+    line-height: 1.55;
+    margin: 8px 0;
+  }
+  .sk-detail-main pre code { background: transparent; padding: 0; color: inherit; }
+  .sk-detail-main a {
+    color: var(--sc-accent-blue);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .sk-detail-main strong { font-weight: 700; }
+  .sk-detail-main blockquote {
+    border-left: 3px solid var(--sc-accent-yellow);
+    background: rgba(255, 230, 122, 0.20);
+    padding: 6px 12px;
+    margin: 8px 0;
+    border-radius: 0 6px 6px 0;
+  }
+  .sk-card--mvp .sk-detail-main { color: #1A1A1A; }
+
+  /* GitHub / Slack 버튼 분리 */
+  .sk-detail-cta {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    margin-top: 4px;
+  }
+  .sk-detail-btn {
     font-size: 13px;
     font-weight: 700;
-    color: var(--sc-accent-blue);
-    align-self: flex-start;
-    padding: 6px 0;
-    border-bottom: 1.5px dashed var(--sc-accent-blue);
+    padding: 10px 16px;
+    border-radius: var(--sc-radius-pill);
+    transition: all 160ms;
+    display: inline-flex; align-items: center; gap: 6px;
   }
-  .sk-detail-link:hover { color: var(--sc-text-primary); border-bottom-color: var(--sc-text-primary); }
-  .sk-card--mvp .sk-detail-link { color: #1A1A1A; border-bottom-color: #1A1A1A; }
+  .sk-detail-btn--dark {
+    background: var(--sc-surface-dark);
+    color: var(--sc-text-on-dark);
+  }
+  .sk-detail-btn--dark:hover { filter: brightness(1.08); transform: translateY(-1px); }
+  .sk-detail-btn--outline {
+    background: transparent;
+    color: var(--sc-text-primary);
+    border: 1.5px solid var(--sc-text-primary);
+  }
+  .sk-detail-btn--outline:hover {
+    background: var(--sc-text-primary);
+    color: var(--sc-bg-signature);
+  }
+  .sk-card--mvp .sk-detail-btn--outline {
+    color: #1A1A1A;
+    border-color: #1A1A1A;
+  }
 
   /* ─── EMPTY ─── */
   .sk-empty {
