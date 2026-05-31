@@ -81,6 +81,21 @@ function toStr(v: any): string {
   return typeof v === 'string' ? v : '';
 }
 
+// github URL 해석: frontmatter links → 본문 풀 URL → 스킴 없는 github.com/owner/repo
+// → plugin marketplace 설치명령(`marketplace add owner/repo`) 순으로 시도.
+function resolveGithubUrl(links: string[], body: string | undefined): string | undefined {
+  const fromLinks = links.find((u) => /github\.com/i.test(u));
+  if (fromLinks) return fromLinks;
+  if (!body) return undefined;
+  const full = body.match(/https?:\/\/(?:www\.)?github\.com\/[\w.-]+\/[\w.-]+/i)?.[0];
+  if (full) return full;
+  const bare = body.match(/(?:www\.)?github\.com\/[\w.-]+\/[\w.-]+/i)?.[0];
+  if (bare) return `https://${bare.replace(/^www\./i, '')}`;
+  const repo = body.match(/marketplace\s+add\s+([\w.-]+\/[\w.-]+)/i)?.[1];
+  if (repo) return `https://github.com/${repo}`;
+  return undefined;
+}
+
 // ───────────────────────────────────────────────
 // 메인 export
 // ───────────────────────────────────────────────
@@ -112,9 +127,9 @@ export function loadCuratedSkills(): CuratedSkill[] {
     const inspiredBy = toStr(fm.inspired_by);
     const userCount = computeUserCount(authors, inspiredBy);
     const links = toArr(fm.links);
-    // frontmatter 우선, 없으면 본문에서 첫 번째 github.com / slack.com URL 추출
-    const githubUrl = links.find((u) => /github\.com/i.test(u))
-      ?? body?.match(/https?:\/\/(?:www\.)?github\.com\/[^\s)>"']+/i)?.[0];
+    // frontmatter 우선, 없으면 본문에서 github URL 추출
+    // (풀 URL · 스킴 없는 github.com/owner/repo · plugin marketplace 설치명령 모두 대응)
+    const githubUrl = resolveGithubUrl(links, body);
     const slackUrl = links.find((u) => /slack\.com/i.test(u))
       ?? body?.match(/https?:\/\/[^\s)>"']*slack\.com\/[^\s)>"']+/i)?.[0];
 
