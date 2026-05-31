@@ -64,6 +64,12 @@ export function parseMemberList(): Member[] {
       currentTeam = teamHeading[1];
       continue;
     }
+    // 조 헤딩이 아닌 다른 ## 섹션(예: '## 갱신 규칙')이나 수평선(---)을 만나면
+    // 팀 컨텍스트를 닫는다. 안 그러면 푸터 규칙 불릿이 직전 조 멤버로 잘못 수집됨.
+    if (/^##\s/.test(line) || /^---\s*$/.test(line)) {
+      currentTeam = null;
+      continue;
+    }
     if (!currentTeam) continue;
 
     const item = line.match(/^-\s+(.+)$/);
