@@ -314,10 +314,19 @@ export type TeamAnalysis = {
   team: string;
   weekNumber: number;
   theme: string;
+  title: string;
+  subtitle: string;
+  tagline: string;
   mvp: string;
   summary: string;
   insight: string;
 };
+
+// 요약 문단의 앞 1~2문장만 — frontmatter tagline 이 없을 때의 폴백.
+function firstSentences(text: string, count = 2): string {
+  const parts = text.replace(/\s+/g, ' ').trim().split(/(?<=[.!?])\s+/);
+  return parts.slice(0, count).join(' ');
+}
 
 function extractH2Section(body: string, heading: string): string {
   const re = new RegExp(`##\\s+${heading.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\$&')}\\s*\\n([\\s\\S]*?)(?=\\n##\\s|$)`);
@@ -336,13 +345,21 @@ export function loadTeamAnalyses(weekNumber: number): TeamAnalysis[] {
     const text = fs.readFileSync(fp, 'utf-8');
     const fm = parseFrontmatter(text);
     const body = stripFrontmatter(text);
+    const summary = extractH2Section(body, '요약');
     out.push({
       team,
       weekNumber,
       theme: fm.theme || '',
+      title: fm.title || fm.theme || '',
+      subtitle: fm.subtitle || '',
+      tagline: fm.tagline || firstSentences(summary),
       mvp: fm.mvp || '',
-      summary: extractH2Section(body, '요약'),
-      insight: extractH2Section(body, '★ 클로드 인사이트') || extractH2Section(body, '클로드 인사이트'),
+      summary,
+      insight:
+        extractH2Section(body, '★ 스폰지 인사이트') ||
+        extractH2Section(body, '스폰지 인사이트') ||
+        extractH2Section(body, '★ 클로드 인사이트') ||
+        extractH2Section(body, '클로드 인사이트'),
     });
   }
   return out;

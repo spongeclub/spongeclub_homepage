@@ -83,11 +83,12 @@ const villageTeams = teamOrder.map((team) => ({ name: team }));
 const teamAnalyses = latest ? loadTeamAnalyses(latest.weekNumber) : [];
 const teamCards = teamOrder.map((team) => {
   const a = teamAnalyses.find((x) => x.team === team);
-  if (a) return { team, theme: a.theme, summary: a.summary, insight: a.insight };
+  if (a) return { team, title: a.title, subtitle: a.subtitle, tagline: a.tagline, insight: a.insight };
   return {
     team,
-    theme: `${latest?.weekNumber ?? ''}주차의 기록`,
-    summary: '아직 분석이 생성되지 않았습니다.',
+    title: `${latest?.weekNumber ?? ''}주차의 기록`,
+    subtitle: '',
+    tagline: '아직 분석이 생성되지 않았습니다.',
     insight: '',
   };
 });
@@ -200,16 +201,17 @@ const year = new Date().getFullYear();
                 <article class="hp-team-card">
                   <header class="hp-team-card-head">
                     <span class="hp-team-card-team">{t.team}</span>
-                    <h3 class="hp-team-card-theme">{t.theme}</h3>
+                    <h3 class="hp-team-card-title">{t.title}</h3>
+                    {t.subtitle && <p class="hp-team-card-subtitle">{t.subtitle}</p>}
                   </header>
                   <div class="hp-team-card-body">
                     <div class="hp-team-card-block">
-                      <span class="hp-team-card-label">요약</span>
-                      <p class="hp-team-card-text">{t.summary}</p>
+                      <span class="hp-team-card-label">간단 요약</span>
+                      <p class="hp-team-card-text">{t.tagline}</p>
                     </div>
                     {t.insight && (
                       <div class="hp-team-card-block hp-team-card-block--insight">
-                        <span class="hp-team-card-label">★ 클로드 인사이트</span>
+                        <span class="hp-team-card-label">★ 스폰지 인사이트</span>
                         <p class="hp-team-card-text">{t.insight}</p>
                       </div>
                     )}
@@ -687,12 +689,18 @@ const year = new Date().getFullYear();
     letter-spacing: 0.10em;
     opacity: 0.75;
   }
-  .hp-team-card-theme {
+  .hp-team-card-title {
     font-family: var(--sc-font-display);
     font-weight: 400;
-    font-size: 22px;
-    line-height: 1.2;
+    font-size: 23px;
+    line-height: 1.18;
     color: var(--sc-bg-signature);
+  }
+  .hp-team-card-subtitle {
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.45;
+    color: rgba(255, 251, 237, 0.72);
   }
   .hp-team-card-body {
     padding: 18px 20px 20px;
