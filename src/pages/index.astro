@@ -11,6 +11,11 @@ import {
   loadTeamAnalyses,
 } from '../lib/data';
 import { loadCuratedSkills, getLatestSkills } from '../lib/curated-skills';
+import publishConfig from '../data/publish-week.json';
+
+// 수동 발행 게이트: publishedWeek 가 숫자면 그 주차까지만 노출(새 주차 MVP가
+// 다 채워질 때까지 자동 전환을 막음). null 이면 폴더 날짜 기준 자동 전환.
+const publishedWeek: number | null = publishConfig.publishedWeek;
 
 // 폴더명 끝 _MMDD 에서 주차 시작 날짜 추출 (현재 연도 기준)
 function weekStartTs(folderName: string): number {
@@ -27,6 +32,8 @@ const today = Date.now();
 const weeks = buildAllWeeks()
   .filter((w) => w.submittedCount > 0)
   .filter((w) => {
+    // 수동 발행 게이트가 켜져 있으면 날짜와 무관하게 publishedWeek 까지만.
+    if (publishedWeek != null) return w.weekNumber <= publishedWeek;
     const ts = weekStartTs(w.folderName);
     return ts === 0 || ts <= today;
   });
