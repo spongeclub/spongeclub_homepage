@@ -689,6 +689,8 @@ function searchHaystack(sk: CuratedSkill): string {
   }
   /* MVP 카드는 항상 풀폭으로 강조 */
   .sk-card--mvp { grid-column: 1 / -1; }
+  /* 펼친 카드는 가로 풀폭 (D안) */
+  .sk-card[aria-expanded="true"] { grid-column: 1 / -1; }
   @media (min-width: 720px) {
     .sk-grid { grid-template-columns: repeat(2, 1fr); }
   }
