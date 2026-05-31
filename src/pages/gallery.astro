@@ -504,7 +504,7 @@ const catEntries = Object.entries(catCounts).sort((a, b) => b[1] - a[1]);
     border-top: 1px solid var(--sc-border-soft);
     display: flex; justify-content: center;
   }
-  .gl-modal-cta-btn {
+  .gl-modal .gl-modal-cta-btn {
     padding: 12px 22px;
     border-radius: var(--sc-radius-pill);
     background: var(--sc-surface-dark);
@@ -513,7 +513,7 @@ const catEntries = Object.entries(catCounts).sort((a, b) => b[1] - a[1]);
     font-size: 14px;
     transition: filter 160ms, transform 160ms;
   }
-  .gl-modal-cta-btn:hover { filter: brightness(1.08); transform: translateY(-1px); }
+  .gl-modal .gl-modal-cta-btn:hover { filter: brightness(1.08); transform: translateY(-1px); }
   .gl-modal-no-url {
     font-size: 13px;
     color: var(--sc-text-muted-mid);
