@@ -112,8 +112,11 @@ export function loadCuratedSkills(): CuratedSkill[] {
     const inspiredBy = toStr(fm.inspired_by);
     const userCount = computeUserCount(authors, inspiredBy);
     const links = toArr(fm.links);
-    const githubUrl = links.find((u) => /github\.com/i.test(u));
-    const slackUrl = links.find((u) => /slack\.com/i.test(u));
+    // frontmatter 우선, 없으면 본문에서 첫 번째 github.com / slack.com URL 추출
+    const githubUrl = links.find((u) => /github\.com/i.test(u))
+      ?? body?.match(/https?:\/\/(?:www\.)?github\.com\/[^\s)>"']+/i)?.[0];
+    const slackUrl = links.find((u) => /slack\.com/i.test(u))
+      ?? body?.match(/https?:\/\/[^\s)>"']*slack\.com\/[^\s)>"']+/i)?.[0];
 
     skills.push({
       slug,
