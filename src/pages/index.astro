@@ -106,15 +106,10 @@ const year = new Date().getFullYear();
         <span class="hp-brand-name">spongeclub</span>
       </a>
       <nav class="hp-nav" aria-label="메인 메뉴">
-        <a href="#this-issue">이번 호</a>
-        <a href="/keywords/">키워드</a>
-        <a href="/skills/">스킬</a>
+        <a href="/skills/">스킬&인사이트</a>
         <a href="/gallery/">갤러리</a>
-        <a href="#archive">지난 호</a>
+        <a href="#archive">주차별 아카이브</a>
       </nav>
-      {latest && (
-        <span class="hp-week-pill">{weekLabel(latest.weekNumber)}</span>
-      )}
     </div>
   </header>
 
@@ -305,10 +300,9 @@ const year = new Date().getFullYear();
         <div class="hp-footer-col">
           <h4>둘러보기</h4>
           <ul>
-            <li><a href="#this-issue">이번 호</a></li>
-            <li><a href="/keywords/">키워드</a></li>
-            <li><a href="/skills/">스킬</a></li>
+            <li><a href="/skills/">스킬&인사이트</a></li>
             <li><a href="/gallery/">갤러리</a></li>
+            <li><a href="#archive">주차별 아카이브</a></li>
           </ul>
         </div>
         <div class="hp-footer-col">
@@ -405,12 +399,6 @@ const year = new Date().getFullYear();
   }
   @media (max-width: 860px) {
     .hp-nav { gap: 14px; font-size: 13px; }
-    .hp-nav a:nth-child(4),
-    .hp-nav a:nth-child(5) { display: none; }
-  }
-  @media (max-width: 540px) {
-    .hp-nav a:nth-child(2),
-    .hp-nav a:nth-child(3) { display: none; }
   }
 
   /* ─── HERO (잡지 표지) — GIF 배경 + 텍스트 오버레이 ─── */
