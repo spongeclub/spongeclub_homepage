@@ -28,6 +28,16 @@ function tierOf(sk: CuratedSkill): 'mvp' | 'reviewed' | 'share' {
   return 'share';
 }
 
+// 두 섹션 — 떠오르는(써본후기, userCount 순) / 새로 들어온(나머지, 최근 등록순)
+const trending = sorted.filter((s) => s.postType === '써본후기');
+const fresh = [...skills]
+  .filter((s) => s.postType !== '써본후기')
+  .sort((a, b) => (b.created || '').localeCompare(a.created || ''));
+const groups: { key: string; label: string; desc: string; list: CuratedSkill[] }[] = [
+  { key: 'trending', label: '떠오르는 스킬', desc: `멤버들이 직접 써보고 남긴 후기 ${trending.length}개`, list: trending },
+  { key: 'fresh', label: '새로 들어온 스킬', desc: `이번 주 새로 올라온 스킬 ${fresh.length}개`, list: fresh },
+];
+
 // 카테고리·난이도·게시 옵션
 const CATEGORIES   = ['전체', '클로드코드', '콘텐츠마케팅', '개발도구', '생산성'] as const;
 const DIFFICULTIES = ['설치만하면됨', '설정좀필요', '코드만져야함'] as const;
@@ -181,7 +191,13 @@ function searchHaystack(sk: CuratedSkill): string {
 
     <!-- GRID -->
     <section class="sk-grid" id="sk-grid">
-      {sorted.map((sk: CuratedSkill) => {
+      {groups.map((group) => (
+        <Fragment>
+          <h2 class="sk-grid-head" data-section-head={group.key} style="grid-column:1/-1">
+            <span class="sk-grid-head-title">{group.label}</span>
+            <span class="sk-grid-head-desc">{group.desc}</span>
+          </h2>
+          {group.list.map((sk: CuratedSkill) => {
         const catColor  = COLOR_BY_CATEGORY[sk.category]   ?? { bd: '#ECE7DC', bg: '#FFFFFF', fg: '#4D4D4D' };
         const diffColor = COLOR_BY_DIFFICULTY[sk.difficulty] ?? { bd: '#ECE7DC', bg: '#FFFFFF', fg: '#4D4D4D' };
         const postColor = COLOR_BY_POST[sk.postType] ?? { bd: '#ECE7DC', bg: '#FFFFFF', fg: '#4D4D4D' };
@@ -199,6 +215,7 @@ function searchHaystack(sk: CuratedSkill): string {
             data-category={sk.category}
             data-difficulty={sk.difficulty}
             data-post-type={sk.postType}
+            data-section={group.key}
             data-search={searchHaystack(sk)}
           >
             {tier === 'mvp' && (
@@ -302,7 +319,9 @@ function searchHaystack(sk: CuratedSkill): string {
             </div>
           </article>
         );
-      })}
+          })}
+        </Fragment>
+      ))}
     </section>
 
     <div id="sk-empty" class="sk-empty" hidden>해당 조건의 스킬이 없습니다.</div>
@@ -338,9 +357,11 @@ function searchHaystack(sk: CuratedSkill): string {
       return q.toLowerCase().split(/\s+/).filter(function (t) { return t.length > 0; });
     }
 
+    var sectionHeads = document.querySelectorAll('[data-section-head]');
     function apply() {
       var n = 0;
       var qTokens = tokens(state.query);
+      var perSection = {};
       cards.forEach(function (card) {
         var c = card.getAttribute('data-category') || '';
         var d = card.getAttribute('data-difficulty') || '';
@@ -353,7 +374,18 @@ function searchHaystack(sk: CuratedSkill): string {
           (state.postType === '전체' || p === state.postType) &&
           queryMatch;
         card.hidden = !pass;
-        if (pass) n++;
+        if (pass) {
+          n++;
+          var sec = card.getAttribute('data-section') || '';
+          perSection[sec] = (perSection[sec] || 0) + 1;
+        }
+      });
+      // 필터 활성 시 섹션 헤더를 숨겨 통합 그리드로. 평소엔 빈 섹션만 숨김.
+      var filtering = state.category !== '전체' || state.difficulty !== '전체' ||
+                      state.postType !== '전체' || state.query !== '';
+      sectionHeads.forEach(function (h) {
+        var key = h.getAttribute('data-section-head') || '';
+        h.hidden = filtering || !(perSection[key] > 0);
       });
       if (visibleEl) visibleEl.textContent = String(n);
       if (emptyEl) emptyEl.hidden = n !== 0;
@@ -686,6 +718,27 @@ function searchHaystack(sk: CuratedSkill): string {
     display: grid;
     grid-template-columns: 1fr;
     gap: 14px;
+  }
+  /* 섹션 헤더 — 떠오르는 / 새로 들어온 (그리드 풀폭) */
+  .sk-grid-head {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin: 10px 0 2px;
+    padding-bottom: 8px;
+    border-bottom: 1.5px solid var(--sc-border-card);
+  }
+  .sk-grid-head:first-child { margin-top: 0; }
+  .sk-grid-head-title {
+    font-family: var(--sc-font-display);
+    font-weight: 400;
+    font-size: 20px;
+    color: var(--sc-text-primary);
+  }
+  .sk-grid-head-desc {
+    font-size: 12.5px;
+    color: var(--sc-text-muted-mid);
   }
   /* MVP 카드는 항상 풀폭으로 강조 */
   .sk-card--mvp { grid-column: 1 / -1; }
