@@ -1039,12 +1039,12 @@ function searchHaystack(sk: CuratedSkill): string {
     transition: all 160ms;
     display: inline-flex; align-items: center; gap: 6px;
   }
-  .sk-detail-btn--dark {
+  body.sk-body .sk-detail-btn--dark {
     background: var(--sc-surface-dark);
     color: var(--sc-text-on-dark);
   }
   .sk-detail-btn--dark:hover { filter: brightness(1.08); transform: translateY(-1px); }
-  .sk-detail-btn--outline {
+  body.sk-body .sk-detail-btn--outline {
     background: transparent;
     color: var(--sc-text-primary);
     border: 1.5px solid var(--sc-text-primary);
